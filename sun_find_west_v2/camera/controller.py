@@ -97,19 +97,20 @@ def connect_camera(dll_path: Path) -> asi.Camera | VideoDummyCamera | None:
         while True:
             # 標準入力の入力を非ブロックで確認
             user_input = check_stdin_input()
-            if VideoDummyCamera is not None and user_input == "DUMVID":
-                logger.info("DUMVID received. Returning VideoDummyCamera instance.")
-                try:
-                    # vid_dummy (VideoDummyCamera) のインスタンスを作成して返す
-                    dummy_cam = VideoDummyCamera()
-                    return dummy_cam
-                except Exception as e:
-                    logger.error(f"Failed to initialize VideoDummyCamera: {e}")
-            else:
-                print(
-                    "\n[INFO] ダミーコード(DUMVID)が入力されましたが、vid_dummy モジュールをインポートできませんでした。"
-                )
-                logger.warning("DUMVID received, but vid_dummy is not available.")
+            if user_input == "DUMVID":
+                if VideoDummyCamera is not None:
+                    logger.info("DUMVID received. Returning VideoDummyCamera instance.")
+                    try:
+                        # vid_dummy (VideoDummyCamera) のインスタンスを作成して返す
+                        dummy_cam = VideoDummyCamera()
+                        return dummy_cam
+                    except Exception as e:
+                        logger.error(f"Failed to initialize VideoDummyCamera: {e}")
+                else:
+                    print(
+                        "\n[INFO] ダミーコード(DUMVID)が入力されましたが、vid_dummy モジュールをインポートできませんでした。"
+                    )
+                    logger.warning("DUMVID received, but vid_dummy is not available.")
 
             try:
                 cameras = asi.list_cameras()

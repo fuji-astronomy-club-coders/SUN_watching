@@ -31,6 +31,9 @@ except ImportError:
         ASI_IMG_RGB24 = 0
         ASI_IMG_Y8 = 0
 
+        class Camera:
+            pass
+
     asi = DummyASI()
 
 
@@ -44,7 +47,7 @@ class VideoDummyCamera:
         """
         Args:
             video_path (str, optional): 動画ファイルのパス。
-                                       指定がない場合はファイルダイアログを表示して選択させます。
+            指定がない場合はファイルダイアログを表示して選択させます。
         """
         if not video_path:
             # tkinterのルートウィンドウを表示しないように隠す
