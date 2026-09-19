@@ -314,11 +314,10 @@ class Visualizer:
 
         num_sliders = len(self.sliders)
 
-        bottom_margin = 0.15 + (num_sliders + 1) * 0.05
+        bottom_margin = 0.20 + (num_sliders + 1) * 0.05
         self.fig.subplots_adjust(bottom=bottom_margin)
-
-        y_pos = 0.05 + (num_sliders * 0.04)
-        ax_slider = self.fig.add_axes((0.2, y_pos, 0.6, 0.03))
+        y_pos = 0.12 + (num_sliders * 0.05)
+        ax_slider = self.fig.add_axes((0.25, y_pos, 0.6, 0.03))
 
         user_label = label if label is not None else name
         kwargs = {}
