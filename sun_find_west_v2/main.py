@@ -43,9 +43,10 @@ file_handler = logging.FileHandler(filename=logfile, mode="a", encoding="utf-8")
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
 
-logging.basicConfig(handlers=[file_handler, console_handler])
+logging.basicConfig(handlers=[file_handler, console_handler],level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+logger.info("====== START PROCESSING ======\n\n")
 logger.info(f"log={logfile}")
 print("Initializing forced termination procedure…")
 
