@@ -1,3 +1,4 @@
+import struct
 import time
 import tkinter as tk
 from tkinter import filedialog
@@ -38,6 +39,94 @@ except ImportError:
     asi = DummyASI()
 
 
+class SERVideoCapture:
+    """
+    天体用 .ser フォーマット（8bit / 16bit）を cv2.VideoCapture と
+    同じインターフェースで読み込むための独自リーダークラス。
+    """
+    def __init__(self, filepath: str):
+        self.filepath = filepath
+        self.file = None
+        self.is_opened = False
+        
+        try:
+            self.file = open(filepath, 'rb')
+            header = self.file.read(178)
+            # SERファイルは178バイトのヘッダを持ち、LUCAM-RECORDERから始まる
+            if len(header) < 178 or not header.startswith(b'LUCAM-RECORDER'):
+                return
+                
+            # エンディアンの取得 (0 = Big Endian, 1 = Little Endian)
+            endian_flag = struct.unpack('<i', header[22:26])[0]
+            self.is_little_endian = (endian_flag == 1)
+            
+            # 幅、高さ、ピクセル深度、フレーム数の取得
+            self.width = struct.unpack('<i', header[26:30])[0]
+            self.height = struct.unpack('<i', header[30:34])[0]
+            self.pixel_depth = struct.unpack('<i', header[34:38])[0]
+            self.frame_count = struct.unpack('<i', header[38:42])[0]
+            
+            # 8bit超の場合は1ピクセル2バイト(16bit)として扱う
+            self.bpp = 2 if self.pixel_depth > 8 else 1
+            self.frame_size = self.width * self.height * self.bpp
+            
+            self.current_frame = 0
+            self.is_opened = True
+            
+        except Exception:
+            if self.file:
+                self.file.close()
+            self.is_opened = False
+
+    def isOpened(self):
+        return self.is_opened
+
+    def get(self, propId):
+        if propId == cv2.CAP_PROP_FRAME_WIDTH:
+            return float(self.width)
+        elif propId == cv2.CAP_PROP_FRAME_HEIGHT:
+            return float(self.height)
+        elif propId == cv2.CAP_PROP_FPS:
+            return 30.0  # SER形式は標準的なFPSを持たないため、仮の値として30.0を返す
+        elif propId == cv2.CAP_PROP_FRAME_COUNT:
+            return float(self.frame_count)
+        return 0.0
+
+    def set(self, propId, value):
+        if propId == cv2.CAP_PROP_POS_FRAMES:
+            self.current_frame = int(value)
+            return True
+        return False
+
+    def read(self):
+        if not self.is_opened or self.current_frame >= self.frame_count:
+            return False, None
+            
+        self.file.seek(178 + self.current_frame * self.frame_size)
+        data = self.file.read(self.frame_size)
+        
+        if len(data) != self.frame_size:
+            return False, None
+            
+        if self.bpp == 1:
+            frame = np.frombuffer(data, dtype=np.uint8).reshape((self.height, self.width))
+        else:
+            # 16bitデータの読み込み
+            dtype = '<u2' if self.is_little_endian else '>u2'
+            frame = np.frombuffer(data, dtype=dtype).reshape((self.height, self.width))
+            if not self.is_little_endian:
+                # OpenCV等の処理と互換性を持たせるためネイティブなuint16に変換
+                frame = frame.astype(np.uint16)
+                 
+        self.current_frame += 1
+        return True, frame
+
+    def release(self):
+        if self.file:
+            self.file.close()
+            self.is_opened = False
+
+
 class VideoDummyCamera:
     """
     zwoasi.Cameraクラスの動作を模倣し、指定された動画ファイル（8bit / 16bit）から
@@ -69,7 +158,12 @@ class VideoDummyCamera:
                 raise ValueError("動画ファイルが選択されませんでした。")
 
         self.video_path = video_path
-        self.cap = cv2.VideoCapture(video_path)
+        
+        # 拡張子が .ser の場合は専用のリーダーを使用し、それ以外はOpenCVを使用する
+        if video_path.lower().endswith('.ser'):
+            self.cap = SERVideoCapture(video_path)
+        else:
+            self.cap = cv2.VideoCapture(video_path)
 
         if not self.cap.isOpened():
             raise ValueError(f"動画ファイルを開けませんでした: {video_path}")
