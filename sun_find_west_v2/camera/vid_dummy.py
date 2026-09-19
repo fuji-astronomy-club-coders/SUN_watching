@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 import cv2
+import numpy as np
 
 try:
     import zwoasi as asi
@@ -27,9 +28,9 @@ except ImportError:
         ASI_TARGET_TEMP = 13
         ASI_COOLER_ON = 14
         ASI_IMG_RAW8 = 0
-        ASI_IMG_RAW16 = 0
-        ASI_IMG_RGB24 = 0
-        ASI_IMG_Y8 = 0
+        ASI_IMG_RGB24 = 1
+        ASI_IMG_RAW16 = 2
+        ASI_IMG_Y8 = 3
 
         class Camera:
             pass
@@ -39,7 +40,7 @@ except ImportError:
 
 class VideoDummyCamera:
     """
-    zwoasi.Cameraクラスの動作を模倣し、指定された動画ファイルから
+    zwoasi.Cameraクラスの動作を模倣し、指定された動画ファイル（8bit / 16bit）から
     フレームを提供するダミークラス。
     """
 
@@ -66,8 +67,10 @@ class VideoDummyCamera:
 
             if not video_path:
                 raise ValueError("動画ファイルが選択されませんでした。")
+
         self.video_path = video_path
         self.cap = cv2.VideoCapture(video_path)
+
         if not self.cap.isOpened():
             raise ValueError(f"動画ファイルを開けませんでした: {video_path}")
 
@@ -77,6 +80,10 @@ class VideoDummyCamera:
         self.fps = self.cap.get(cv2.CAP_PROP_FPS)
         if self.fps <= 0:
             self.fps = 30.0
+
+        # 内部状態
+        self.bins = 1
+        self.image_type = getattr(asi, "ASI_IMG_RAW8", 0)
 
         # 仮想のコントロール値 (Gain, Exposure, Temp)
         self.controls = {
@@ -89,7 +96,7 @@ class VideoDummyCamera:
     def get_camera_property(self) -> dict:
         """
         zwoasi.Camera.get_camera_property() の互換メソッド。
-        必要なプロパティ情報を辞書形式で返します。
+        16bit(RAW16)のサポート情報を返します。
         """
         return {
             "Name": "Dummy Video Camera",
@@ -99,7 +106,10 @@ class VideoDummyCamera:
             "IsColorCam": True,
             "BayerPattern": 0,
             "SupportedBins": [1, 2, 4],
-            "SupportedVideoFormat": [getattr(asi, "ASI_IMG_RAW8", 0)],
+            "SupportedVideoFormat": [
+                getattr(asi, "ASI_IMG_RAW8", 0),
+                getattr(asi, "ASI_IMG_RAW16", 2),
+            ],
             "PixelSize": 3.75,
             "MechanicalShutter": False,
             "ST4Port": False,
@@ -107,7 +117,7 @@ class VideoDummyCamera:
             "IsUSB3Host": True,
             "IsUSB3Camera": True,
             "ELEC_PER_ADU": 1.0,
-            "BitDepth": 8,
+            "BitDepth": 16,
         }
 
     def get_controls(self):
@@ -166,7 +176,8 @@ class VideoDummyCamera:
     def set_roi_format(
         self, width=None, height=None, bins=1, image_type=0, start_x=0, start_y=0
     ):
-        """zwoasi.Camera.set_roi_format() の互換メソッド。
+        """
+        zwoasi.Camera.set_roi_format() の互換メソッド。
 
         ROI（関心領域）サイズやビニング、画像タイプをダミー値として保存します。
         """
@@ -195,13 +206,8 @@ class VideoDummyCamera:
             self.cap.release()
 
     def get_roi_format(self):
-        """
-        ROIフォーマットを返す。
-        (width, height, binning, img_type)
-        img_type = 0 は ASI_IMG_RAW8 (グレースケール1チャンネル) を想定
-        """
-        img_type = getattr(asi, "ASI_IMG_RAW8", 0)
-        return (self.width, self.height, 1, img_type)
+        """現在のROIフォーマット(width, height, binning, img_type)を返します。"""
+        return (self.width, self.height, self.bins, self.image_type)
 
     def get_control_value(self, control_type):
         """コントロール値と自動設定フラグ(bool)のタプルを返す"""
@@ -214,18 +220,16 @@ class VideoDummyCamera:
 
     def capture_video_frame(self, timeout=500):
         """
-        動画から1フレーム読み込み、RAW8(グレースケール)のバイト列として返す。
-        動画が終了した場合は最初からループする。
+        動画から1フレーム読み込み、`image_type` に準拠した画像（RAW8 / RAW16）のバイト列を返します。
         """
         if not self.is_capturing:
             raise getattr(asi, "ZWO_CaptureError", Exception)("Capture not started")
 
-        # 実際のカメラのフレームレートを模倣するための待機
         time.sleep(1.0 / self.fps)
 
         ret, frame = self.cap.read()
         if not ret:
-            # 動画の終端に達したら最初に戻す（ループ再生）
+            # 動画終端到達時は最初に戻す（ループ再生）
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             ret, frame = self.cap.read()
             if not ret:
@@ -233,7 +237,26 @@ class VideoDummyCamera:
                     "Failed to read dummy frame"
                 )
 
-        # オリジナルの frame_to_image が numpy.frombuffer を使って bytes をパースするため、
-        # グレースケール(1チャンネル)に変換してから bytes として返す
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # 1. カラー(3チャンネル)の場合はグレースケールに変換
+        if frame.ndim == 3 and frame.shape[2] == 3:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = frame
+
+        raw16_type = getattr(asi, "ASI_IMG_RAW16", 2)
+
+        # 2. 要求されているフォーマット（RAW16 or RAW8）に応じた型変換
+        if self.image_type == raw16_type:
+            if gray.dtype == np.uint8:
+                # 8bit入力 -> 16bit出力へスケールアップ (0-65535)
+                gray = gray.astype(np.uint16) * 256
+            elif gray.dtype != np.uint16:
+                gray = gray.astype(np.uint16)
+        else:
+            if gray.dtype == np.uint16:
+                # 16bit入力 -> 8bit出力へスケールダウン (0-255)
+                gray = (gray / 256).astype(np.uint8)
+            elif gray.dtype != np.uint8:
+                gray = gray.astype(np.uint8)
+
         return gray.tobytes()
