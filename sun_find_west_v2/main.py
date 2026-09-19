@@ -34,9 +34,8 @@ logfile.parent.mkdir(parents=True, exist_ok=True)
 
 format = "%(asctime)s [%(levelname)s] %(name)s %(funcName)s: %(message)s"
 formatter = logging.Formatter(format)
-
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.DEBUG)
 console_handler.setFormatter(formatter)
 
 file_handler = logging.FileHandler(filename=logfile, mode="a", encoding="utf-8")
@@ -91,7 +90,9 @@ try:
     import csv
     import os
     from collections import deque
+    from pprint import pformat
     from time import time
+
     import cv2
     import numpy as np
 except ImportError:
@@ -119,6 +120,7 @@ except ImportError:
 else:
     logger.debug("All custom modules imported successfully.")
 
+logger.debug(f"loaded parameters:\n{pformat(parameter)}")
 
 print("__loading parameter...")
 try:
