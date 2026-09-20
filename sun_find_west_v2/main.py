@@ -44,7 +44,8 @@ file_handler.setFormatter(formatter)
 
 logging.basicConfig(handlers=[file_handler, console_handler],level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
+# TODO:config,schemaの更新コマンドを追加
+# TODO:logで残すためにも例外処理を強化
 logger.info("====== START PROCESSING ======\n\n")
 logger.info(f"log={logfile}")
 print("Initializing forced termination procedure…")
@@ -207,6 +208,7 @@ cap_dir.mkdir(parents=True, exist_ok=True)
 
 
 # SunTrackerApp クラス定義
+# TODO:パラメータを可能な限り増やす(Visualyzer中心に)
 class SunTrackerApp:
     """
     太陽の位置解析・角度算出・UI描画を統括するメインアプリケーションクラス。

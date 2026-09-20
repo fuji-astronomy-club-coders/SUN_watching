@@ -30,7 +30,7 @@ except ImportError:
     raise
 
 try:
-    ONLY_DUMMY = asi.dum
+    ONLY_DUMMY = asi.dum # pyright: ignore[reportAttributeAccessIssue]
 except AttributeError:
     ONLY_DUMMY = False
 
