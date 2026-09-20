@@ -1,8 +1,12 @@
 import logging
 from pathlib import Path
 
-from config.pathes import pathes
-from config.utils_json import json_loader, json_saver, sha256_file
+if __name__ == "__main__":
+    from pathes import pathes
+    from utils_json import json_loader, json_saver, sha256_file
+else:
+    from config.pathes import pathes
+    from config.utils_json import json_loader, json_saver, sha256_file
 
 logger = logging.getLogger(__name__)
 
@@ -145,5 +149,5 @@ if __name__ == "__main__":
     import sys
 
     CONFIG_ROOT = Path(__file__).parent.resolve()
-    sys.path.append(CONFIG_ROOT)
+    sys.path.append(str(CONFIG_ROOT))
     when_updated_schemaJ(pathes, True)

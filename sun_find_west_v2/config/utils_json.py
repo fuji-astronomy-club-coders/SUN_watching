@@ -6,10 +6,6 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-from config.pathes import pathes
-
-globals().update(pathes)
-
 
 def json_loader(jsonpath: Path) -> dict:
     try:

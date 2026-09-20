@@ -43,17 +43,17 @@ def convert_angle_to_west(robust_angle: float) -> float:
 
 # 1. OpenCircleArrow クラス (描画パーツ)
 class OpenCircleArrow:
-    # NEXT:矢印の始点を水平ひだりに固定
     def __init__(
         self,
         ax,
         center=(0, 0),
         radius=1.0,
-        angle=90,  # gap_angleやstart_angleの代わりに直接角度を受け取る
+        angle=90,
         edgecolor="C0",
         lw=3,
         tri_size=0.12,
         tri_color="C0",
+        show_triangle=True,  # 矢じりの表示/非表示を制御するフラグを追加
     ):
         """
         インタラクティブにパラメーターを更新できる矢印付き円弧オブジェクト
@@ -61,11 +61,13 @@ class OpenCircleArrow:
         self.ax = ax
         self.center = center
         self.radius = radius
-        self.angle = angle  # -180 ~ 180度の角度
+        self.angle = angle
         self.edgecolor = edgecolor
         self.lw = lw
         self.tri_size = tri_size
         self.tri_color = tri_color
+        self.show_triangle = show_triangle
+        
         # 描画したパッチを保持する変数
         self.arc_patch = None
         self.tri_patch = None
@@ -78,8 +80,10 @@ class OpenCircleArrow:
         # すでに描画されている古いパッチがあれば削除する
         if self.arc_patch is not None:
             self.arc_patch.remove()
+            self.arc_patch = None
         if self.tri_patch is not None:
             self.tri_patch.remove()
+            self.tri_patch = None
 
         cx, cy = self.center
 
@@ -87,12 +91,12 @@ class OpenCircleArrow:
         if self.angle >= 0:
             # 正の角度（反時計回り）
             arc_t1 = 180
-            arc_t2 = -1*self.angle
+            arc_t2 = -1 * self.angle
             tangent_angle = self.angle + 90
             tip_angle = self.angle
         else:
             # 負の角度（時計回り）
-            arc_t1 = -1*self.angle
+            arc_t1 = -1 * self.angle
             arc_t2 = 180
             tangent_angle = self.angle - 90
             tip_angle = self.angle
@@ -111,22 +115,23 @@ class OpenCircleArrow:
         )
         self.ax.add_patch(self.arc_patch)
 
-        # 矢じりの計算
-        tip_rad = np.deg2rad(tip_angle)
-        ex = cx + self.radius * np.cos(tip_rad)
-        ey = cy + self.radius * np.sin(tip_rad)
+        # 矢じりの計算と生成 (show_triangleがTrueのときのみ描画)
+        if self.show_triangle:
+            tip_rad = np.deg2rad(tip_angle)
+            ex = cx + self.radius * np.cos(tip_rad)
+            ey = cy + self.radius * np.sin(tip_rad)
 
-        t_rad = np.deg2rad(tangent_angle)
+            t_rad = np.deg2rad(tangent_angle)
 
-        s = self.tri_size * self.radius
-        tri = np.array([[0.0, 0.0], [-s, s / 2], [-s, -s / 2]])
+            s = self.tri_size * self.radius
+            tri = np.array([[0.0, 0.0], [-s, s / 2], [-s, -s / 2]])
 
-        R = np.array([[np.cos(t_rad), -np.sin(t_rad)], [np.sin(t_rad), np.cos(t_rad)]])
-        tri_rot = (tri @ R.T) + np.array([ex, ey])
+            R = np.array([[np.cos(t_rad), -np.sin(t_rad)], [np.sin(t_rad), np.cos(t_rad)]])
+            tri_rot = (tri @ R.T) + np.array([ex, ey])
 
-        # 矢じり（多角形）の生成
-        self.tri_patch = Polygon(tri_rot, closed=True, color=self.tri_color)
-        self.ax.add_patch(self.tri_patch)
+            # 矢じり（多角形）の生成
+            self.tri_patch = Polygon(tri_rot, closed=True, color=self.tri_color)
+            self.ax.add_patch(self.tri_patch)
 
         # 画面の更新を促す
         if self.ax.figure and self.ax.figure.canvas:
@@ -154,6 +159,7 @@ class Visualizer:
         grid_nx=4,
         grid_r=300,
         grid_alpha=0.4,
+        opencircle_triangle=False
     ):
         self.width = width
         self.height = height
@@ -277,6 +283,7 @@ class Visualizer:
             angle=0,  # 初期角度
             edgecolor="purple",
             tri_color="purple",
+            show_triangle=opencircle_triangle
         )
 
         self.sliders = {}
