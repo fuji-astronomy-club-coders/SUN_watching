@@ -79,7 +79,7 @@ def calculate_west_angle_robust(
     angle_deg: float = math.degrees(angle_rad)
 
     vectorYX = vy, vx
-    return angle_deg, vectorYX
+    return -1*angle_deg, vectorYX
 
 
 # --- テスト実行と描画 ---

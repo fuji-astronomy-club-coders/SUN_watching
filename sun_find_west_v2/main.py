@@ -380,7 +380,7 @@ class SunTrackerApp:
                             result = west_angle(recent_pts, recent_timestamps)
                             if result is None:
                                 raise RuntimeError
-                            robust_angle, _vectorYX = result
+                            robust_angle, vectorYX = result
                         except (ValueError, TypeError, RuntimeError) as e:
                             logger.warning(f"Error calculating robust west angle: {e}")
                             robust_angle = None
@@ -428,6 +428,7 @@ class SunTrackerApp:
                             r,
                             recent_pts,
                             robust_angle,
+                            vectorYX,
                             frame_idx=self.frame_count,
                             total_frames="∞",
                         )

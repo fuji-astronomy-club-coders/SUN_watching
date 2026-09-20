@@ -86,14 +86,14 @@ class OpenCircleArrow:
         # 尻を右(0度)に固定し、正負で矢じりの向きを反転
         if self.angle >= 0:
             # 正の角度（反時計回り）
-            arc_t1 = 0
-            arc_t2 = self.angle
+            arc_t1 = 180
+            arc_t2 = -1*self.angle
             tangent_angle = self.angle + 90
             tip_angle = self.angle
         else:
             # 負の角度（時計回り）
-            arc_t1 = self.angle
-            arc_t2 = 0
+            arc_t1 = -1*self.angle
+            arc_t2 = 180
             tangent_angle = self.angle - 90
             tip_angle = self.angle
 
@@ -360,6 +360,7 @@ class Visualizer:
         r,
         recent_pts,
         robust_angle,
+        robust_vector,
         frame_idx=None,
         total_frames=None,
     ):
@@ -388,7 +389,6 @@ class Visualizer:
         else:
             # 2つの座標系、いずれも上が正,下が負で-180~+180
             west_angle = convert_angle_to_west(robust_angle)  # 左0°の座標
-            east_angle = robust_angle  # 右0°の座標
 
             # 許容範囲に応じて色を変更
             if abs(west_angle) < self.acceptable:
@@ -396,19 +396,17 @@ class Visualizer:
             else:
                 uxc = ("red", "purple")
 
-            east_rad = np.radians(east_angle)
-
-            # 角度からベクトルのX, Y成分を計算 (長さは self.sunline)
-            u = self.sunline * np.cos(east_rad)
-            v = self.sunline * np.sin(east_rad)
-
+            vectory,vectorx = robust_vector
+            u = self.sunline * vectorx
+            v = self.sunline * vectory
+            
             # 矢印の始点(cx, cy)とベクトル成分(u, v)を更新
             self.ax_sunline.set_offsets(np.c_[cx, cy])
             self.ax_sunline.set_UVC(u, v)
 
             self.arrow.update(
                 center=(cx, cy),
-                angle=east_angle,
+                angle=robust_angle,
                 edgecolor=uxc[1],
                 tri_color=uxc[1],
             )
