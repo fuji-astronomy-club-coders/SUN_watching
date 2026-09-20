@@ -42,6 +42,7 @@ def sha256_file(filepath: Path, save: bool = True) -> str:
     h = hashlib.sha256()
     with open(filepath, "rb") as f:
         for chunk in iter(lambda: f.read(8192), b""):
+            assert isinstance(chunk, bytes)
             h.update(chunk)
     hashV = h.hexdigest()
 
@@ -60,5 +61,5 @@ def sha256_valid(filepath: Path) -> bool:
             expected = f.readlines()[-1]
     else:
         expected = None
-        logger.debug(f"__hash not found :{Path}")
+        logger.debug(f"hash not found :{Path}")
     return actual == expected

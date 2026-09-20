@@ -31,7 +31,7 @@ except ImportError:
 
 try:
     ONLY_DUMMY = asi.dum
-except Exception:
+except AttributeError:
     ONLY_DUMMY = False
 
 
@@ -176,7 +176,7 @@ control_map = {
 }
 
 
-def apply_camera_config(cam: asi.Camera, config: dict) -> None:
+def apply_camera_config(cam:asi.Camera | VideoDummyCamera, config: dict) -> None:
     """ZWO ASIカメラの各種パラメータを一括で設定する関数
 
     cam: 初期化済みの zwoasi.Camera インスタンス
@@ -190,7 +190,7 @@ def apply_camera_config(cam: asi.Camera, config: dict) -> None:
     height = config.get("height", "max")
     if height == "max":
         height = props["MaxHeight"]
-    bins = config.get("bins")
+    bins = config.get("bins",1)
     img_type_str = str(config.get("img_type", "RAW8")).upper()
     img_type = IMG_TYPE_MAP.get(img_type_str, asi.ASI_IMG_RAW8)
 

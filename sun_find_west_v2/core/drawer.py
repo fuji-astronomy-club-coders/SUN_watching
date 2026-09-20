@@ -510,14 +510,14 @@ if __name__ == "__main__":
         elif footstep_mode in ["1", "2"]:
             if footstep_mode == "1":
                 print(
-                    "文字を入力してください（終了するには Ctrl+D [Mac/Linux] または Ctrl+Z [Windows] を押してください）:"
+                    "Please enter text (press Ctrl+D [Mac/Linux] or Ctrl+Z [Windows] to finish).）:"
                 )
                 # すべての入力を一括で取得
                 input_footsteps = sys.stdin.read().replace("^Z", "").strip()
             elif footstep_mode == "2":
                 file_path = askopenfile(mode="r", filetypes=[("Text files", "*.txt")])
                 if file_path is None:
-                    print("ファイルが選択されませんでした。")
+                    print("No file was selected.")
                     sys.exit(1)
                 input_footsteps = file_path.read().strip()
             try:
@@ -548,7 +548,7 @@ if __name__ == "__main__":
                 try:
                     from RANSAC import calculate_west_angle_robust as west_angle
                 except ImportError:
-                    print("エラー: RANSACモジュールが見つかりません。")
+                    print("Error: RANSAC module not found.")
                     sys.exit(1)
 
             width, height = img_shape
@@ -557,13 +557,13 @@ if __name__ == "__main__":
             # Numpy配列化
             pts = np.array(footsteps)
 
-            # --- 変更点: 初めに一度だけRANSACで基準の角度を計算 ---
-            print("初期軌跡データからRANSACで基準角度を計算しています...")
+            # 初めに一度だけRANSACで基準の角度を計算 
+            print("The reference angle is calculated from the initial trajectory data using RANSAC...")
             west_re = west_angle(pts)
             if west_re is not None:
                 base_calculate, vectorYX = west_re
             else:
-                print("データが少なすぎます。")
+                print("There is too little data.")
                 sys.exit(1)
 
             # UI確認のため Visualizer を初期化
@@ -594,7 +594,7 @@ if __name__ == "__main__":
             num_frames = len(footsteps)
 
             print(
-                f"デモを開始します (FPS: {fps})。グラフウィンドウを閉じるかCtrl+Cで終了します。"
+                f"Starting the demo (FPS: {fps}). Close the graph window or press Ctrl+C to exit."
             )
 
             # アニメーションループ
@@ -623,7 +623,10 @@ if __name__ == "__main__":
                     # 角度は「初期計算値 + スライダーの回転量」で決定
 
                     robust_angle = base_calculate + angle_deg
-
+                    rad=np.radians(robust_angle)
+                    vecx=np.cos(rad)
+                    vecy=np.sin(rad)
+                    vector=vecx,vecy
                     # 描画更新（frame_idx を渡すように変更）
                     viz.update(
                         black_img,
@@ -632,6 +635,7 @@ if __name__ == "__main__":
                         radius,
                         recent_pts,
                         robust_angle,
+                        robust_vector=vector,
                         frame_idx=frame_idx,
                     )
 

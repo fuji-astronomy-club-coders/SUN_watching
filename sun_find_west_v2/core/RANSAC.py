@@ -109,12 +109,12 @@ if __name__ == "__main__":
     result = calculate_west_angle_robust(noisy_trajectory)
 
     if result is None:
-        print("データが不足しています")
+        print("There is insufficient data.")
         sys.exit()
     else:
         robust_angle, (vy, vx) = result
-        print(f"単純計算の角度: {simple_angle:.2f} 度")
-        print(f"RANSACによるロバストな角度: {robust_angle:.2f} 度")
+        print(f"The perspective of a simple calculation: {simple_angle:.2f} degree")
+        print(f"Robust Angle Estimation via RANSAC: {robust_angle:.2f} degree")
 
     # --- matplotlib による描画処理 ---
     plt.figure(figsize=(8, 8))

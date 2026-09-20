@@ -16,7 +16,7 @@ def generate_defaultJ_schemaJ(defaultpath: Path, schemapath: Path) -> dict:
     schema = json_loader(schemapath)
 
     if schema.get("type") != "object" or "properties" not in schema:
-        msg = "_ENG_スキーマの形式が適切ではありません (ルートは 'properties' を持つ 'object' である必要があります)"
+        msg = "The schema format is invalid (the root must be an 'object' with 'properties')."
         logger.error(f"{msg}")
         raise ValueError(msg)
 
@@ -35,7 +35,7 @@ def generate_defaultJ_schemaJ(defaultpath: Path, schemapath: Path) -> dict:
     try:
         data = get_default_properties(schema["properties"])
     except Exception as e:
-        logger.error(f"_ENG_スキーマの解析中にエラーが発生しました: {e}")
+        logger.error(f"An error occurred while parsing the schema.: {e}")
         raise
 
     json_saver(data, defaultpath)
@@ -135,13 +135,13 @@ def when_updated_schemaJ(pathes: dict, reset_userset: bool) -> dict:
     generate_outlinesJ_defaultJ(
         pathes["OUTLINE_JSON_PARH"], pathes["DEFAULT_JSON_PATH"]
     )
-    logger.info("__sucessful update default&outline jsons")
+    logger.info("Successfully updated the default outline JSON.")
     if reset_userset:
-        logger.info("__reseting user setting")
+        logger.info("Resetting user settings...")
         generate_configT_defaultJ(
             pathes["DEFAULT_JSON_PATH"], pathes["CONFIG_TEXT_PATH"]
         )
-        logger.info("__sucessful reset user setting")
+        logger.info("User settings successfully reset.")
     return json_loader(pathes["CONFIG_SCHEMA_PATH"])
 
 

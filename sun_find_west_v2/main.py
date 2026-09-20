@@ -19,7 +19,7 @@ for parent in [current.parent, *current.parents]:
 
 if root_path is None:
     print(
-        "[FATAL] 'sun_find_west_v2' というフォルダが親ディレクトリの中に見つかりませんでした。"
+        "[FATAL] The folder 'sun_find_west_v2' was not found in the parent directory."
     )
     sys.exit(1)
 
@@ -122,19 +122,19 @@ else:
 
 logger.debug(f"loaded parameters:\n{pformat(parameter)}")
 
-print("__loading parameter...")
+print("Loading parameters...")
 try:
     camera_param = parameter["Camera"]
     main_param = parameter["sun_find_west_v2"]
     visualizer_constract_param = main_param["Visualizer"]
     visualizer_constract_param["acceptable"] = main_param["Analyzer"]["acceptable"]
 except RuntimeError:
-    logger.exception("__filed to load parameter")
+    logger.exception("Failed to load parameters.")
     cancel_process()
-logger.info("__sucessful __loading parameter")
+logger.info("Successfully loaded parameters.")
 
 # カメラ接続と設定
-print("__setting parameter...")
+print("Implementing parameters...")
 logger.info("Attempting to connect to the camera...")
 camera = None
 try:
@@ -284,7 +284,7 @@ class SunTrackerApp:
         self.frame_count = 0
         self.buffer_c.clear()
         self.buffer_t.clear()
-        logger.info("軌跡バッファが手動でリセットされました。")
+        logger.info("The trajectory buffer has been manually reset.")
 
     def request_capture(self):
         """現在のフレーム画像の保存をリクエストします。"""
@@ -293,7 +293,7 @@ class SunTrackerApp:
     def request_quit(self):
         """メインループの終了をリクエストします。"""
         self.quit_requested = True
-        logger.info("終了ボタンが押されました。")
+        logger.info("The exit button has been pressed.")
 
     def cleanup(self):
         """
@@ -445,10 +445,10 @@ class SunTrackerApp:
                             self.cap_dir / f"raw_{cap_ts}_f{self.frame_count}.png"
                         )
                         if cv2.imwrite(str(raw_path), img):
-                            logger.info(f"キャプチャ保存完了:{raw_path.name}")
+                            logger.info(f"Capture saved.:{raw_path.name}")
                         else:
                             logger.error(
-                                f"キャプチャ保存失敗: \n path = {raw_path.name}"
+                                f"Failed to save capture.: \n path = {raw_path.name}"
                             )
 
                     # 7. ウィンドウが外部から閉じられたかの検知
