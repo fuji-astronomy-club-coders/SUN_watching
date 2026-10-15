@@ -42,9 +42,9 @@ file_handler = logging.FileHandler(filename=logfile, mode="a", encoding="utf-8")
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
 
-logging.basicConfig(handlers=[file_handler, console_handler],level=logging.DEBUG)
+logging.basicConfig(handlers=[file_handler, console_handler], level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-# TODO:config,schemaの更新コマンドを追加
+# TONOTDO:config,schemaの更新コマンドを追加
 # TODO:logで残すためにも例外処理を強化
 logger.info("====== START PROCESSING ======\n\n")
 logger.info(f"log={logfile}")
