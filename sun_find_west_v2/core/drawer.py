@@ -1,3 +1,5 @@
+"""太陽位置の推定結果を Matplotlib で可視化する描画コンポーネント。"""
+
 import logging
 import traceback
 
@@ -44,19 +46,43 @@ def convert_angle_to_west(robust_angle: float) -> float:
 
 # 1. OpenCircleArrow クラス (描画パーツ)
 class OpenCircleArrow:
+    """角度などのパラメーターを更新できる、矢印付き円弧を描画する。"""
+
     def __init__(
         self,
-        ax,
-        center=(0, 0),
-        radius=1.0,
-        angle=90,
-        edgecolor="C0",
-        lw=3,
-        tri_size=0.12,
-        tri_color="C0",
-        show_triangle=True,  # 矢じりの表示/非表示を制御するフラグを追加
+        ax: plt.Axes,
+        center: tuple[float, float] = (0, 0),
+        radius: float = 1.0,
+        angle: float = 90,
+        edgecolor: str = "C0",
+        lw: float = 3,
+        tri_size: float = 0.12,
+        tri_color: str = "C0",
+        show_triangle: bool = True,  # 矢じりの表示/非表示を制御するフラグ
     ) -> None:
-        """インタラクティブにパラメーターを更新できる矢印付き円弧オブジェクト"""
+        """矢印付き円弧を初期化する。
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            円弧を追加する描画領域。
+        center : tuple[float, float]
+            円弧の中心座標。
+        radius : float
+            円弧の半径。
+        angle : float
+            矢印の角度（度）。
+        edgecolor : str
+            円弧と矢印の色。
+        lw : float
+            線幅。
+        tri_size : float
+            矢じりのサイズ。
+        tri_color : str
+            矢じりの色。
+        show_triangle : bool
+            矢じりを描画するかどうか。
+        """
         self.ax = ax
         self.center = center
         self.radius = radius
@@ -136,7 +162,7 @@ class OpenCircleArrow:
         if self.ax.figure and self.ax.figure.canvas:
             self.ax.figure.canvas.draw_idle()
 
-    def update(self, **kwargs) -> None:
+    def update(self, **kwargs: object) -> None:
         """外部から変数を更新するためのメソッド。"""
         for key, value in kwargs.items():
             if hasattr(self, key):
@@ -146,18 +172,43 @@ class OpenCircleArrow:
 
 # 2. Visualizer クラス (メイン描画マネージャー)
 class Visualizer:
+    """太陽像、軌跡、推定方向、操作用ウィジェットを描画する。"""
+
     def __init__(
         self,
-        width,
-        height,
-        acceptable=1,
-        grid_color="#FFFFFF",
-        grid_ny=2,
-        grid_nx=4,
-        grid_r=300,
-        grid_alpha=0.4,
-        opencircle_triangle=False
+        width: int,
+        height: int,
+        acceptable: float = 1,
+        grid_color: str = "#FFFFFF",
+        grid_ny: int = 2,
+        grid_nx: int = 4,
+        grid_r: float = 300,
+        grid_alpha: float = 0.4,
+        opencircle_triangle: bool = False,
     ) -> None:
+        """描画ウィンドウと操作ウィジェットを初期化する。
+
+        Parameters
+        ----------
+        width : int
+            表示画像の幅。
+        height : int
+            表示画像の高さ。
+        acceptable : float
+            正常範囲とみなす角度の許容値。
+        grid_color : str
+            ガイド線の色。
+        grid_ny : int
+            Y 方向のガイド分割数。
+        grid_nx : int
+            X 方向のガイド分割数。
+        grid_r : float
+            ガイド円の半径。
+        grid_alpha : float
+            ガイド線の透明度。
+        opencircle_triangle : bool
+            角度表示矢印の矢じりを表示するかどうか。
+        """
         self.width = width
         self.height = height
         self.acceptable = acceptable
@@ -315,7 +366,30 @@ class Visualizer:
         label: str | None = None,
         valfmt: str | None = None,  # 表示フォーマット (例: "%1.0f", "%1.2f")
     ) -> Slider:
+        """指定した範囲と初期値でスライダーを追加する。
 
+        Parameters
+        ----------
+        name : str
+            スライダーの識別名。
+        valmin : float
+            最小値。
+        valmax : float
+            最大値。
+        valinit : float
+            初期値。
+        on_change : Callable | None
+            値の変更時に呼び出すコールバック。
+        label : str | None
+            表示ラベル。None の場合は name を使用する。
+        valfmt : str | None
+            数値の表示フォーマット。
+
+        Returns
+        -------
+        Slider
+            追加したスライダー。
+        """
         num_sliders = len(self.sliders)
 
         bottom_margin = 0.20 + (num_sliders + 1) * 0.05
@@ -358,15 +432,15 @@ class Visualizer:
 
     def update(
         self,
-        img,
-        cx,
-        cy,
-        r,
-        recent_pts,
-        robust_angle,
-        robust_vector,
-        frame_idx=None,
-        total_frames=None,
+        img: np.ndarray,
+        cx: float,
+        cy: float,
+        r: float,
+        recent_pts: np.ndarray,
+        robust_angle: float | None,
+        robust_vector: tuple[float, float],
+        frame_idx: int | None = None,
+        total_frames: int | None = None,
     ) -> None:
         """計算結果を受け取り、画面を更新する"""
         self.ax_img.set_data(img)
@@ -438,7 +512,7 @@ class Visualizer:
         # 描画を反映
         plt.pause(0.001)
 
-    def is_alive(self):
+    def is_alive(self) -> bool:
         """ウィンドウが閉じられていないか判定する"""
         return plt.fignum_exists(
             self.fig.number  # pyright: ignore[reportAttributeAccessIssue]

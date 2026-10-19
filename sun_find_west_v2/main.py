@@ -1,3 +1,5 @@
+"""カメラ映像を取得し、太陽位置の推定・描画・結果保存を実行する。"""
+
 print("Booting up the system…")
 print("Setting up logger…")
 import datetime
@@ -5,7 +7,7 @@ import logging
 import sys
 import traceback
 from pathlib import Path
-from typing import NoReturn
+from typing import Any, NoReturn
 
 print("setting root path...")
 # パス解決と初期設定
@@ -32,8 +34,8 @@ reports_path.mkdir(parents=True, exist_ok=True)
 logfile = reports_path / "logs" / f"sunfindwestV2_{ts}.log"
 logfile.parent.mkdir(parents=True, exist_ok=True)
 
-format = "%(asctime)s [%(levelname)s] %(name)s %(funcName)s: %(message)s"
-formatter = logging.Formatter(format)
+log_format = "%(asctime)s [%(levelname)s] %(name)s %(funcName)s: %(message)s"
+formatter = logging.Formatter(log_format)
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)
 console_handler.setFormatter(formatter)
@@ -51,14 +53,15 @@ logger.info(f"log={logfile}")
 print("Initializing forced termination procedure…")
 
 
-def cancel_process(camera=None, viz=None) -> NoReturn:
-    """
-    初期化中（アプリ起動前）に致命的エラーが発生した場合の強制終了処理。
-    カメラおよび描画リソースを安全に解放してプログラムを終了します。
+def cancel_process(camera: Any | None = None, viz: Any | None = None) -> NoReturn:
+    """致命的エラー時にカメラと描画リソースを解放して終了する。
 
-    Args:
-        camera: ASIカメラのインスタンス（未接続時は None）
-        viz: Visualizerのインスタンス（未起動時は None）
+    Parameters
+    ----------
+    camera : Any | None
+        ASI カメラのインスタンス。未接続時は None。
+    viz : Any | None
+        Visualizer のインスタンス。未起動時は None。
     """
     logger.info("===== canceling process and cleaning up =====")
     try:
@@ -156,15 +159,31 @@ def frame_to_image(frame: bytes, width: int, height: int, img_type: int) -> np.n
 class SunTrackerApp:
     """太陽の位置解析・角度算出・UI描画を統括するメインアプリケーションクラス。"""
 
-    def __init__(self, camera, viz, main_param, csv_file_path, cap_dir, img_info) -> None:
-        """
-        Args:
-            camera: 初期化・接続済みのZWO ASIカメラインスタンス
-            viz (Visualizer): UI描画用インスタンス
-            main_param (dict): 設定ファイルから読み込んだメインパラメータ
-            csv_file_path (Path): 解析結果を保存するCSVのパス
-            cap_dir (Path): 手動キャプチャ画像を保存するディレクトリ
-            img_info (tuple): (width, height, img_type) からなるカメラのROI情報
+    def __init__(
+        self,
+        camera: Any,
+        viz: Any,
+        main_param: dict[str, Any],
+        csv_file_path: Path,
+        cap_dir: Path,
+        img_info: tuple[int, int, int],
+    ) -> None:
+        """アプリのカメラ、描画、保存先、画像形式を初期化する。
+
+        Parameters
+        ----------
+        camera : Any
+            初期化・接続済みの ZWO ASI カメラ。
+        viz : Any
+            UI 描画用の Visualizer。
+        main_param : dict[str, Any]
+            設定ファイルから読み込んだメインパラメータ。
+        csv_file_path : Path
+            解析結果を保存する CSV ファイルのパス。
+        cap_dir : Path
+            手動キャプチャ画像を保存するディレクトリ。
+        img_info : tuple[int, int, int]
+            width、height、img_type からなるカメラの ROI 情報。
         """
         self.camera = camera
         self.viz = viz
@@ -240,9 +259,9 @@ class SunTrackerApp:
         logger.info("The exit button has been pressed.")
 
     def cleanup(self) -> None:
-        """
-        リソースの解放処理。
-        ループ終了後、または例外発生時に必ず実行され、カメラやウィンドウを閉じます。
+        """リソースを解放する。
+
+        ループ終了後、または例外発生時にカメラやウィンドウを閉じる。
         """
         logger.info("===== cleaning up and releasing resources =====")
         try:
@@ -267,20 +286,21 @@ class SunTrackerApp:
             logger.error(f"Failed to release resources during cleanup: {e}")
         logger.info("===== FINISHED =====")
 
-    def run(self, csv_headers) -> None:
-        """
-        リアルタイム画像処理と描画のメインループ。
+    def run(self, csv_headers: list[str]) -> None:
+        """リアルタイム画像処理と描画のメインループを実行する。
 
-        Args:
-            csv_headers (list): CSVファイルに出力するヘッダー行のリスト
+        Parameters
+        ----------
+        csv_headers : list[str]
+            CSV ファイルに出力するヘッダー行。
         """
         logger.info(
             "Starting real-time visualization. Press the 'Quit' button or close the window to exit."
         )
 
         try:
-            with open(
-                self.csv_file_path, mode="w", newline="", encoding="utf-8"
+            with self.csv_file_path.open(
+                mode="w", newline="", encoding="utf-8"
             ) as csv_file:
                 csv_writer = csv.writer(csv_file)
                 csv_writer.writerow(csv_headers)
