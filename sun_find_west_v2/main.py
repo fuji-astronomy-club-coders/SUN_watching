@@ -140,7 +140,8 @@ def frame_to_image(frame: bytes, width: int, height: int, img_type: int) -> np.n
         height (int): 画像の高さ
         img_type (int): ZWO ASI SDKで定義される画像タイプ
 
-    Returns:
+    Returns
+    -------
         np.ndarray: 変換された2次元または3次元のNumPy画像配列
     """
     dtype, channels = _frame_format_map.get(img_type, (np.uint8, 1))
@@ -153,11 +154,9 @@ def frame_to_image(frame: bytes, width: int, height: int, img_type: int) -> np.n
 # SunTrackerApp クラス定義
 # TODO:パラメータを可能な限り増やす(Visualyzer中心に)
 class SunTrackerApp:
-    """
-    太陽の位置解析・角度算出・UI描画を統括するメインアプリケーションクラス。
-    """
+    """太陽の位置解析・角度算出・UI描画を統括するメインアプリケーションクラス。"""
 
-    def __init__(self, camera, viz, main_param, csv_file_path, cap_dir, img_info):
+    def __init__(self, camera, viz, main_param, csv_file_path, cap_dir, img_info) -> None:
         """
         Args:
             camera: 初期化・接続済みのZWO ASIカメラインスタンス
@@ -185,7 +184,7 @@ class SunTrackerApp:
 
         self._bind_ui_callbacks()
 
-    def _bind_ui_callbacks(self):
+    def _bind_ui_callbacks(self) -> None:
         """UIコンポーネント（ボタン・スライダー）へのイベントバインド"""
         self.viz.add_button(
             name="reset_buffer",
@@ -224,23 +223,23 @@ class SunTrackerApp:
             on_change=lambda val: handle_config(self.camera, asi.ASI_EXPOSURE, val),
         )
 
-    def reset_buffers(self):
+    def reset_buffers(self) -> None:
         """軌跡バッファとフレームカウントを手動で初期化します。"""
         self.frame_count = 0
         self.buffer_c.clear()
         self.buffer_t.clear()
         logger.info("The trajectory buffer has been manually reset.")
 
-    def request_capture(self):
+    def request_capture(self) -> None:
         """現在のフレーム画像の保存をリクエストします。"""
         self.capture_requested = True
 
-    def request_quit(self):
+    def request_quit(self) -> None:
         """メインループの終了をリクエストします。"""
         self.quit_requested = True
         logger.info("The exit button has been pressed.")
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """
         リソースの解放処理。
         ループ終了後、または例外発生時に必ず実行され、カメラやウィンドウを閉じます。
@@ -268,7 +267,7 @@ class SunTrackerApp:
             logger.error(f"Failed to release resources during cleanup: {e}")
         logger.info("===== FINISHED =====")
 
-    def run(self, csv_headers):
+    def run(self, csv_headers) -> None:
         """
         リアルタイム画像処理と描画のメインループ。
 

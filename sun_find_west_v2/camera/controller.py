@@ -3,7 +3,7 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     logger.info("--- starting as main process ---")
 else:
     logger.info("--- starting as module process ---")
@@ -40,7 +40,6 @@ def connect_camera(
             False なら実機ASIカメラに接続する。zwoasi が無い場合は RuntimeError。
             この値は run.py が決める。ここで自動判定やキー入力による切替はしない。
     """
-
     if use_dummy:
         logger.info("ダミーモードとして接続処理をskipします")
         return VideoDummyCamera()
@@ -213,7 +212,8 @@ def handle_config(cam: asi.Camera, key: int, val: float) -> None:
     ASI_TARGET_TEMP
     ASI_COOLER_ON
     ASI_FAN_ON
-    ASI_ANTI_DEW_HEATER"""
+    ASI_ANTI_DEW_HEATER
+    """
     try:
         cam.set_control_value(key, int(val))
         logger.debug(f"{key} updated to: {int(val)}")

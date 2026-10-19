@@ -48,7 +48,8 @@ class SERVideoCapture:
     天体用 .ser フォーマット（8bit / 16bit）を cv2.VideoCapture と
     同じインターフェースで読み込むための独自リーダークラス。
     """
-    def __init__(self, filepath: str):
+
+    def __init__(self, filepath: str) -> None:
         self.filepath = filepath
         self.file = None
         self.is_opened = False
@@ -96,7 +97,7 @@ class SERVideoCapture:
             return float(self.frame_count)
         return 0.0
 
-    def set(self, propId, value):
+    def set(self, propId, value) -> bool:
         if propId == cv2.CAP_PROP_POS_FRAMES:
             self.current_frame = int(value)
             return True
@@ -125,7 +126,7 @@ class SERVideoCapture:
         self.current_frame += 1
         return True, frame
 
-    def release(self):
+    def release(self) -> None:
         if self.file:
             self.file.close()
             self.is_opened = False
@@ -273,7 +274,7 @@ class VideoDummyCamera:
 
     def set_roi_format(
         self, width=None, height=None, bins=1, image_type=0, start_x=0, start_y=0
-    ):
+    ) -> None:
         """
         zwoasi.Camera.set_roi_format() の互換メソッド。
 
@@ -289,15 +290,15 @@ class VideoDummyCamera:
         self.start_x = start_x
         self.start_y = start_y
 
-    def start_video_capture(self):
+    def start_video_capture(self) -> None:
         """動画キャプチャの開始を模倣"""
         self.is_capturing = True
 
-    def stop_video_capture(self):
+    def stop_video_capture(self) -> None:
         """動画キャプチャの停止を模倣"""
         self.is_capturing = False
 
-    def close(self):
+    def close(self) -> None:
         """リソースの解放"""
         self.stop_video_capture()
         if self.cap.isOpened():
@@ -312,14 +313,12 @@ class VideoDummyCamera:
         val = self.controls.get(control_type, 0)
         return (val, False)
 
-    def set_control_value(self, control_type, value, auto=False):
+    def set_control_value(self, control_type, value, auto=False) -> None:
         """UIからの設定変更を受け付けるダミーメソッド"""
         self.controls[control_type] = value
 
     def capture_video_frame(self, timeout=500):
-        """
-        動画から1フレーム読み込み、`image_type` に準拠した画像（RAW8 / RAW16）のバイト列を返します。
-        """
+        """動画から1フレーム読み込み、`image_type` に準拠した画像（RAW8 / RAW16）のバイト列を返します。"""
         if not self.is_capturing:
             raise getattr(asi, "ZWO_CaptureError", Exception)("Capture not started")
 

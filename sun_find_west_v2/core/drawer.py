@@ -3,7 +3,7 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     logger.info("--- starting as main process ---")
 else:
     logger.info("--- starting as module process ---")
@@ -32,7 +32,8 @@ def convert_angle_to_west(robust_angle: float) -> float:
     Args:
         robust_angle (float): 変換前の角度（度数法 / degree）
 
-    Returns:
+    Returns
+    -------
         float: UI用の角度（度数法 / degree, 範囲: -180 ~ 180）
     """
     raw_ui_angle = 180.0 - robust_angle  # 座標系の変換
@@ -54,10 +55,8 @@ class OpenCircleArrow:
         tri_size=0.12,
         tri_color="C0",
         show_triangle=True,  # 矢じりの表示/非表示を制御するフラグを追加
-    ):
-        """
-        インタラクティブにパラメーターを更新できる矢印付き円弧オブジェクト
-        """
+    ) -> None:
+        """インタラクティブにパラメーターを更新できる矢印付き円弧オブジェクト"""
         self.ax = ax
         self.center = center
         self.radius = radius
@@ -75,7 +74,7 @@ class OpenCircleArrow:
         # 初回描画
         self.draw()
 
-    def draw(self):
+    def draw(self) -> None:
         """現在保持しているパラメーターで再描画を行う内部メソッド"""
         # すでに描画されている古いパッチがあれば削除する
         if self.arc_patch is not None:
@@ -137,10 +136,8 @@ class OpenCircleArrow:
         if self.ax.figure and self.ax.figure.canvas:
             self.ax.figure.canvas.draw_idle()
 
-    def update(self, **kwargs):
-        """
-        外部から変数を更新するためのメソッド。
-        """
+    def update(self, **kwargs) -> None:
+        """外部から変数を更新するためのメソッド。"""
         for key, value in kwargs.items():
             if hasattr(self, key):
                 setattr(self, key, value)
@@ -160,7 +157,7 @@ class Visualizer:
         grid_r=300,
         grid_alpha=0.4,
         opencircle_triangle=False
-    ):
+    ) -> None:
         self.width = width
         self.height = height
         self.acceptable = acceptable
@@ -370,7 +367,7 @@ class Visualizer:
         robust_vector,
         frame_idx=None,
         total_frames=None,
-    ):
+    ) -> None:
         """計算結果を受け取り、画面を更新する"""
         self.ax_img.set_data(img)
         self.ax_min2.set_center((cx, cy))  # pyright: ignore[reportAttributeAccessIssue]
@@ -447,7 +444,7 @@ class Visualizer:
             self.fig.number  # pyright: ignore[reportAttributeAccessIssue]
         )
 
-    def close(self):
+    def close(self) -> None:
         """描画リソースを安全に閉じる"""
         plt.close(self.fig)
 
@@ -484,7 +481,7 @@ if __name__ == "__main__":
         slider_angle = Slider(ax_angle, "Angle", -180, 180, valinit=45)
         slider_radius = Slider(ax_radius, "Radius", 0.1, 1.4, valinit=1.0)
 
-        def handle_update(val):
+        def handle_update(val) -> None:
             arrow.update(
                 angle=slider_angle.val,
                 radius=slider_radius.val,
