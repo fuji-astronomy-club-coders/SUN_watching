@@ -11,7 +11,7 @@ import cv2
 import numpy as np
 
 try:
-    import zwoasi as asi
+    import zwoasi as asi  # pyright: ignore[reportMissingImports]
 
     ZWOASI_AVAILABLE = True
 except ImportError:
