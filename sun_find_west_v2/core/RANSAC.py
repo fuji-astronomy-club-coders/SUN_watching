@@ -72,12 +72,12 @@ def calculate_west_angle_robust(
     ransac_x = RANSACRegressor(random_state=42)
     ransac_x.fit(t, x)
     # estimator_ は学習済みの LinearRegression インスタンス
-    vx: float = float(ransac_x.estimator_.coef_[0])
+    vx: float = float(ransac_x.estimator_.coef_[0])  # pyright: ignore[reportAttributeAccessIssue]
 
     # y方向の速度(傾き)をRANSACで推定
     ransac_y = RANSACRegressor(random_state=42)
     ransac_y.fit(t, y)
-    vy: float = float(ransac_y.estimator_.coef_[0])
+    vy: float = float(ransac_y.estimator_.coef_[0])  # pyright: ignore[reportAttributeAccessIssue]
 
     # ベクトルからラジアン・度数法へ変換
     angle_rad: float = math.atan2(vy, vx)

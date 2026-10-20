@@ -15,6 +15,7 @@ try:
 
     import matplotlib.pyplot as plt
     import numpy as np
+    from matplotlib.axes import Axes
     from matplotlib.patches import Arc, Circle, Polygon
     from matplotlib.widgets import Button, Slider
 except ImportError:
@@ -50,7 +51,7 @@ class OpenCircleArrow:
 
     def __init__(
         self,
-        ax: plt.Axes,
+        ax: Axes,
         center: tuple[float, float] = (0, 0),
         radius: float = 1.0,
         angle: float = 90,
