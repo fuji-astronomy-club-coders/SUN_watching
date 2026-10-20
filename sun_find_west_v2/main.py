@@ -1,34 +1,35 @@
 """カメラ映像を取得し、太陽位置の推定・描画・結果保存を実行する。"""
 
-print("Booting up the system…")
-print("Setting up logger…")
+from __future__ import annotations
+
 import datetime
 import logging
 import sys
 import traceback
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Any, NoReturn
+from typing import Any, NoReturn, Protocol
 
+print("Booting up the system…")
+print("Setting up logger…")
 print("setting root path...")
 # パス解決と初期設定
 current = Path(__file__).resolve()
-root_path = None
 for parent in [current.parent, *current.parents]:
     if parent.name == "sun_find_west_v2":
         root_path = parent
         sys.path.append(str(root_path))
         break
-
-if root_path is None:
-    print(
-        "[FATAL] The folder 'sun_find_west_v2' was not found in the parent directory."
-    )
-    sys.exit(1)
+    else:
+        print(
+            "[FATAL] The folder 'sun_find_west_v2' was not found in the parent directory."
+        )
+        sys.exit(1)
 
 print("setting logger...")
 dt = datetime.datetime.now().strftime("%Y%m%d")
 ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-reports_path = root_path.parent / "report" / f"{dt}"
+reports_path = root_path.parent / "report" / f"{dt}"  # pyright: ignore[reportPossiblyUnboundVariable]
 reports_path.mkdir(parents=True, exist_ok=True)
 
 logfile = reports_path / "logs" / f"sunfindwestV2_{ts}.log"
@@ -46,6 +47,112 @@ file_handler.setFormatter(formatter)
 
 logging.basicConfig(handlers=[file_handler, console_handler], level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+
+class CameraLike(Protocol):
+    """メイン処理が使用するカメラ操作のプロトコル。"""
+
+    def stop_video_capture(self) -> None:
+        """動画キャプチャを停止する。"""
+        ...
+
+    def close(self) -> None:
+        """カメラまたは描画 UI のリソースを解放する。"""
+        ...
+
+    def capture_video_frame(self, timeout: int = 500) -> bytes:
+        """カメラから1フレーム分のバイト列を取得する。"""
+        ...
+
+    def get_control_value(self, control_type: int) -> tuple[int | float, bool]:
+        """制御項目の値と自動設定フラグを返す。"""
+        ...
+
+    def start_video_capture(self) -> None:
+        """動画キャプチャを開始する。"""
+        ...
+
+    def get_roi_format(self) -> tuple[int, int, int, int]:
+        """ROI の幅、高さ、ビニング、画像形式を返す。"""
+        ...
+
+    def set_roi_format(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        bins: int = 1,
+        image_type: int = 0,
+        start_x: int = 0,
+        start_y: int = 0,
+    ) -> None:
+        """ROI の形式を設定する。"""
+        ...
+
+    def get_camera_property(self) -> Mapping[str, Any]:
+        """カメラの基本プロパティを返す。"""
+        ...
+
+    def get_controls(self) -> Mapping[int, object]:
+        """利用可能なカメラ制御項目を返す。"""
+        ...
+
+    def set_control_value(
+        self, control_type: int, value: int | float, auto: bool = False
+    ) -> None:
+        """指定したカメラ制御項目を更新する。"""
+        ...
+
+
+class VisualizerLike(Protocol):
+    """メイン処理が使用する描画 UI 操作のプロトコル。"""
+
+    def add_button(
+        self,
+        name: str,
+        label: str,
+        on_clicked: Callable[[], None],
+        position: tuple[float, float, float, float] | None = None,
+    ) -> object:
+        """指定位置にボタンを追加する。"""
+        ...
+
+    def add_slider(
+        self,
+        name: str,
+        valmin: float,
+        valmax: float,
+        valinit: float,
+        on_change: Callable[[float], None] | None = None,
+        label: str | None = None,
+        valfmt: str | None = None,
+    ) -> object:
+        """指定した範囲と初期値でスライダーを追加する。"""
+        ...
+
+    def update(
+        self,
+        img: np.ndarray,
+        cx: float,
+        cy: float,
+        r: float,
+        recent_pts: np.ndarray,
+        robust_angle: float | None,
+        robust_vector: tuple[float, float],
+        frame_idx: int | None = None,
+        total_frames: int | str | None = None,
+    ) -> None:
+        """解析結果を使って描画を更新する。"""
+        ...
+
+    def is_alive(self) -> bool:
+        """描画ウィンドウが開いているかを返す。"""
+        ...
+
+    def close(self) -> None:
+        """描画リソースを解放する。"""
+        ...
+
+
 # TONOTDO:config,schemaの更新コマンドを追加
 # TODO:logで残すためにも例外処理を強化
 logger.info("====== START PROCESSING ======\n\n")
@@ -53,14 +160,16 @@ logger.info(f"log={logfile}")
 print("Initializing forced termination procedure…")
 
 
-def cancel_process(camera: Any | None = None, viz: Any | None = None) -> NoReturn:
+def cancel_process(
+    camera: CameraLike | None = None, viz: VisualizerLike | None = None
+) -> NoReturn:
     """致命的エラー時にカメラと描画リソースを解放して終了する。
 
     Parameters
     ----------
-    camera : Any | None
+    camera : CameraLike | None
         ASI カメラのインスタンス。未接続時は None。
-    viz : Any | None
+    viz : VisualizerLike | None
         Visualizer のインスタンス。未起動時は None。
     """
     logger.info("===== canceling process and cleaning up =====")
@@ -161,8 +270,8 @@ class SunTrackerApp:
 
     def __init__(
         self,
-        camera: Any,
-        viz: Any,
+        camera: CameraLike,
+        viz: VisualizerLike,
         main_param: dict[str, Any],
         csv_file_path: Path,
         cap_dir: Path,
@@ -172,9 +281,9 @@ class SunTrackerApp:
 
         Parameters
         ----------
-        camera : Any
+        camera : CameraLike
             初期化・接続済みの ZWO ASI カメラ。
-        viz : Any
+        viz : VisualizerLike
             UI 描画用の Visualizer。
         main_param : dict[str, Any]
             設定ファイルから読み込んだメインパラメータ。
@@ -209,19 +318,19 @@ class SunTrackerApp:
             name="reset_buffer",
             label="Reset",
             on_clicked=self.reset_buffers,
-            position=[0.02, 0.05, 0.07, 0.04],
+            position=(0.02, 0.05, 0.07, 0.04),
         )
         self.viz.add_button(
             name="capture_image",
             label="Capture",
             on_clicked=self.request_capture,
-            position=[0.10, 0.05, 0.07, 0.04],
+            position=(0.10, 0.05, 0.07, 0.04),
         )
         self.viz.add_button(
             name="quit",
             label="Quit",
             on_clicked=self.request_quit,
-            position=[0.18, 0.05, 0.07, 0.04],
+            position=(0.18, 0.05, 0.07, 0.04),
         )
         self.viz.add_slider(
             name="gain",
@@ -384,6 +493,9 @@ class SunTrackerApp:
                         logger.error(f"Failed to write row to CSV: {e}")
 
                     # 5. UIの描画更新
+                    if "vectorYX" not in locals():
+                        vectorYX = (0, 0)
+
                     try:
                         self.viz.update(
                             img,
@@ -392,7 +504,7 @@ class SunTrackerApp:
                             r,
                             recent_pts,
                             robust_angle,
-                            vectorYX,
+                            vectorYX,  # pyright:ignore [reportPossiblyUnboundVariable]
                             frame_idx=self.frame_count,
                             total_frames="∞",
                         )
@@ -490,7 +602,9 @@ def main(config: dict) -> None:
     try:
         env_filename = root_path / "camera" / "bin" / "ASICamera2.dll"
         os.environ["ZWO_ASI_LIB"] = str(env_filename)
-        logger.debug(f"Successfully set ZWO_ASI_LIB environment variable:{env_filename}")
+        logger.debug(
+            f"Successfully set ZWO_ASI_LIB environment variable:{env_filename}"
+        )
 
         logger.info(f"dummy_camera={dummy_camera}")
         camera = connect_camera(env_filename, use_dummy=dummy_camera)

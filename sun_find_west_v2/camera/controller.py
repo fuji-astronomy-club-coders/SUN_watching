@@ -2,10 +2,41 @@
 
 import logging
 import time
-import traceback
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any, Protocol
 
 logger = logging.getLogger(__name__)
+
+
+class CameraControlsProtocol(Protocol):
+    """カメラ設定関数が必要とする操作を定義する。"""
+
+    def get_camera_property(self) -> Mapping[str, Any]:
+        """カメラの基本プロパティを返す。"""
+        ...
+
+    def set_roi_format(
+        self,
+        width: int | None = None,
+        height: int | None = None,
+        bins: int = 1,
+        image_type: int = 0,
+        start_x: int = 0,
+        start_y: int = 0,
+    ) -> None:
+        """ROI の形式を設定する。"""
+        ...
+
+    def get_controls(self) -> Mapping[int, object]:
+        """利用可能なカメラ制御項目を返す。"""
+        ...
+
+    def set_control_value(
+        self, control_type: int, value: int | float, auto: bool = False
+    ) -> None:
+        """指定したカメラ制御項目を更新する。"""
+        ...
 
 if __name__ == "__main__":
     logger.info("--- starting as main process ---")
@@ -148,13 +179,13 @@ control_map = {
 }
 
 
-def apply_camera_config(cam: asi.Camera | VideoDummyCamera, config: dict) -> None:
+def apply_camera_config(cam: CameraControlsProtocol, config: dict) -> None:
     """ZWO ASIカメラの各種パラメータを一括で設定する。
 
     Parameters
     ----------
-    cam : asi.Camera | VideoDummyCamera
-        初期化済みの zwoasi.Camera またはダミーカメラ。
+    cam : CameraControlsProtocol
+        初期化済みのカメラ。
     config : dict
         カメラの各種パラメータを格納した辞書。
     """
@@ -192,7 +223,7 @@ def apply_camera_config(cam: asi.Camera | VideoDummyCamera, config: dict) -> Non
     logger.info("__sucessful set camera config")
 
 
-def handle_config(cam: asi.Camera, key: int, val: float) -> None:
+def handle_config(cam: CameraControlsProtocol, key: int, val: float) -> None:
     """指定された ASI コントロールを更新する。
 
     利用可能な主なキーは ``ASI_EXPOSURE``、``ASI_GAIN``、``ASI_OFFSET``、
@@ -204,7 +235,7 @@ def handle_config(cam: asi.Camera, key: int, val: float) -> None:
 
     Parameters
     ----------
-    cam : asi.Camera
+    cam : CameraControlsProtocol
         設定対象のカメラ。
     key : int
         ASI コントロール ID。

@@ -440,7 +440,7 @@ class Visualizer:
         robust_angle: float | None,
         robust_vector: tuple[float, float],
         frame_idx: int | None = None,
-        total_frames: int | None = None,
+        total_frames: int | str | None = None,
     ) -> None:
         """計算結果を受け取り、画面を更新する"""
         self.ax_img.set_data(img)
@@ -555,7 +555,7 @@ if __name__ == "__main__":
         slider_angle = Slider(ax_angle, "Angle", -180, 180, valinit=45)
         slider_radius = Slider(ax_radius, "Radius", 0.1, 1.4, valinit=1.0)
 
-        def handle_update(val) -> None:
+        def handle_update(val: float) -> None:
             arrow.update(
                 angle=slider_angle.val,
                 radius=slider_radius.val,

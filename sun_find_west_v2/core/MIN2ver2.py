@@ -4,7 +4,6 @@
 limbwigth * (3/2) の範囲にない点は黒点とみなします。
 """
 
-import os
 import pathlib
 from pprint import pformat
 
@@ -13,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import gridspec
 from matplotlib.patches import Circle
+
 version = "MIN2 v2.3.8"  #fix:popによるindexの変化を阻止
 
 def cut_and_sampling(
@@ -193,7 +193,7 @@ def show_circle(
     iter_text = "Last" if is_last else str(iteration_count)
 
     # ウィンドウ全体の上部に大きく表示
-    img_name = os.path.basename(img_path) if img_path else "Unknown"
+    img_name = pathlib.Path(img_path).name if img_path else "Unknown"
 
     fig.suptitle(
         f"{img_name}  |  Iteration: {iter_text}", fontsize=16, fontweight="bold"
@@ -401,7 +401,7 @@ def show_circle_simple(
             edgecolors="white",
         )
     # ウィンドウ全体の上部に大きく表示
-    img_name = os.path.basename(img_path) if img_path else "Unknown"
+    img_name = pathlib.Path(img_path).name if img_path else "Unknown"
     # is_last が True なら "Last"、それ以外は数値を表示
     iter_text = "Last" if is_last else str(iteration_count)
     fig.suptitle(
@@ -504,9 +504,9 @@ def MIN2_ignore_sunspots(
 
     all_sunspots=[]
     safe_points=spots
-    for iter in range(iter_cycles+2):
+    for iteration_index in range(iter_cycles + 2):
         if debug:
-            print(f"iter: {iter}")
+            print(f"iter: {iteration_index}")
         outside_spots = []
         inside_spots = []
         for point in safe_points:
@@ -589,17 +589,17 @@ if __name__ == "__main__":
 
         dirpath = askdirectory(title="フォルダを選択してください")
         print(f"[INFO]:dir={dirpath}")
-        import glob
-        import os
-
         patterns = ("*.jpg", "*.jpeg", "*.png", "*.tiff")
-        files = []
-        for p in patterns:
-            files.extend(glob.glob(os.path.join(dirpath, p)))
-        for file in files:
-            img = cv2.imread(file, cv2.IMREAD_UNCHANGED)
+        selected_dir = pathlib.Path(dirpath)
+        image_paths = [
+            image_path
+            for pattern in patterns
+            for image_path in selected_dir.glob(pattern)
+        ]
+        for image_path in image_paths:
+            img = cv2.imread(str(image_path), cv2.IMREAD_UNCHANGED)
             if img is None:
-                print(f"[ERROR]:Failed to read image: {file}")
+                print(f"[ERROR]:Failed to read image: {image_path}")
                 break
             (cx,cy),r = MIN2_ignore_sunspots(img, show=False, debug=False, limb_wigth=60)
             result=cx,cy,r

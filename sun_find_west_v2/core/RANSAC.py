@@ -1,9 +1,9 @@
 """RANSAC を用いて太陽像の移動方向と速度ベクトルを推定する。"""
 
-version = 1.00
-
 import logging
 import traceback
+
+version = 1.00
 
 logger = logging.getLogger(__name__)
 
