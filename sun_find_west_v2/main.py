@@ -140,6 +140,7 @@ class VisualizerLike(Protocol):
         robust_vector: tuple[float, float],
         frame_idx: int | None = None,
         total_frames: int | str | None = None,
+        recent_timestamps: np.ndarray | None = None,
     ) -> None:
         """解析結果を使って描画を更新する。"""
         ...
