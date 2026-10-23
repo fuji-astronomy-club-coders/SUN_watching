@@ -140,6 +140,7 @@ class VisualizerLike(Protocol):
         robust_vector: tuple[float, float],
         frame_idx: int | None = None,
         total_frames: int | str | None = None,
+        recent_timestamps: np.ndarray | None = None,
     ) -> None:
         """解析結果を使って描画を更新する。"""
         ...
@@ -507,6 +508,7 @@ class SunTrackerApp:
                             vectorYX,  # pyright:ignore [reportPossiblyUnboundVariable]
                             frame_idx=self.frame_count,
                             total_frames="∞",
+                            recent_timestamps=recent_timestamps,
                         )
                     except Exception as e:
                         logger.warning(f"Visualizer update failed: {e}")
