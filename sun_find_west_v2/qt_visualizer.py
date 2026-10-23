@@ -81,28 +81,28 @@ class _ImageLabel(QLabel):
             self._on_wheel(a0.angleDelta().y(), a0.position())
             a0.accept()
 
-    def mousePressEvent(self, a0: QMouseEvent | None) -> None:
+    def mousePressEvent(self, ev: QMouseEvent | None) -> None:
         """Delegate a click to the pan or overview-map controller."""
-        if a0 is not None:
+        if ev is not None:
             self._on_mouse_press(
-                a0.position(),
-                a0.button() == Qt.MouseButton.LeftButton,
+                ev.position(),
+                ev.button() == Qt.MouseButton.LeftButton,
             )
-            a0.accept()
+            ev.accept()
 
-    def mouseMoveEvent(self, a0: QMouseEvent | None) -> None:
+    def mouseMoveEvent(self, ev: QMouseEvent | None) -> None:
         """Delegate pointer movement while the left button is held."""
-        if a0 is not None:
-            is_left_down = bool(a0.buttons() & Qt.MouseButton.LeftButton)
-            self._on_mouse_move(a0.position(), is_left_down)
-            a0.accept()
+        if ev is not None:
+            is_left_down = bool(ev.buttons() & Qt.MouseButton.LeftButton)
+            self._on_mouse_move(ev.position(), is_left_down)
+            ev.accept()
 
-    def mouseReleaseEvent(self, a0: QMouseEvent | None) -> None:
+    def mouseReleaseEvent(self, ev: QMouseEvent | None) -> None:
         """Stop panning when the mouse button is released."""
-        if a0 is not None:
-            if a0.button() == Qt.MouseButton.LeftButton:
+        if ev is not None:
+            if ev.button() == Qt.MouseButton.LeftButton:
                 self._on_mouse_release()
-            a0.accept()
+            ev.accept()
 
     def mouseDoubleClickEvent(self, a0: QMouseEvent | None) -> None:
         """Delegate a double click to reset the viewport."""
