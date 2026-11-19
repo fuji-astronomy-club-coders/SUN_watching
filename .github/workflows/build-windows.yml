@@ -64,7 +64,10 @@ jobs:
 
       - name: Create installer
         shell: pwsh
-        run: iscc packaging\SUN_watching.iss
+        run: |
+          $version = python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])"
+          Write-Host "Building installer version $version"
+          iscc "/DAppVersion=$version" packaging\SUN_watching.iss
 
       - name: Generate checksums
         shell: pwsh
