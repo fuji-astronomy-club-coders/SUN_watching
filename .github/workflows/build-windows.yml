@@ -7,33 +7,52 @@ on:
       - "v*"
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: windows-build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-windows:
     runs-on: windows-2022
+    timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.13"
           architecture: "x64"
           cache: "pip"
 
-      - name: Install dependencies
+      - name: Install build dependencies
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .
-          python -m pip install pyinstaller
+          python -m pip install . "pyinstaller>=6,<7"
 
       - name: Install optional ASI camera support
         shell: pwsh
-        run: python -m pip install zwoasi
-        continue-on-error: true
+        run: |
+          python -m pip install zwoasi
+          if ($LASTEXITCODE -ne 0) {
+            Write-Warning "zwoasi を導入できませんでした。ダミーカメラのみ対応するバイナリを作成します。"
+          }
+
+      - name: Verify Inno Setup
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) {
+            choco install innosetup --no-progress --yes --limit-output
+          }
+          Get-Command iscc | Select-Object -ExpandProperty Source
+
+      - name: Clean previous build output
+        shell: pwsh
+        run: Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
 
       - name: Build executable directory
         shell: pwsh
@@ -43,27 +62,50 @@ jobs:
         shell: pwsh
         run: Compress-Archive -Path dist\SUN_watching\* -DestinationPath dist\SUN_watching-windows-x64.zip -Force
 
-      - name: Install Inno Setup
-        run: choco install innosetup --no-progress --yes
-
       - name: Create installer
         shell: pwsh
         run: iscc packaging\SUN_watching.iss
 
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          Get-FileHash -Algorithm SHA256 `
+            dist\SUN_watching-windows-x64.zip, `
+            dist\installer\SUN_watching-setup-windows-x64.exe |
+            ForEach-Object {
+              "{0}  {1}" -f $_.Hash.ToLowerInvariant(), (Split-Path $_.Path -Leaf)
+            } | Tee-Object -FilePath dist\SHA256SUMS.txt
+
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: SUN_watching-windows-x64
           path: |
             dist/SUN_watching-windows-x64.zip
             dist/installer/SUN_watching-setup-windows-x64.exe
+            dist/SHA256SUMS.txt
           if-no-files-found: error
+          retention-days: 14
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-windows
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: SUN_watching-windows-x64
+          path: dist
 
       - name: Create GitHub release for version tag
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
             dist/SUN_watching-windows-x64.zip
             dist/installer/SUN_watching-setup-windows-x64.exe
+            dist/SHA256SUMS.txt
