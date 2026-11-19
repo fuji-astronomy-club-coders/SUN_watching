@@ -185,7 +185,7 @@
           "properties": {
             "n": {
               "type": "integer",
-              "minimum": 1,
+              "minimum": 2,
               "maximum": 200,
               "description": "画像格子の分割数"
             },
@@ -242,10 +242,6 @@
               "minimum": 0,
               "maximum": 1,
               "description": "画像グリッドの透明度(alpha)"
-            },
-            "opencircle_triangle": {
-              "type": "boolean",
-              "description": "西との角度差を表示する円弧に矢印をつける"
             }
           },
           "required": [
@@ -253,8 +249,7 @@
             "grid_ny",
             "grid_nx",
             "grid_r",
-            "grid_alpha",
-            "opencircle_triangle"
+            "grid_alpha"
           ],
           "additionalProperties": false
         }

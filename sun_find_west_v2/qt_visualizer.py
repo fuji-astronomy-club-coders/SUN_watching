@@ -193,10 +193,8 @@ class Visualizer:
         grid_nx: int = 4,
         grid_r: float = 300,
         grid_alpha: float = 0.4,
-        opencircle_triangle: bool = False,
     ) -> None:
         """Create the live dashboard and camera controls."""
-        del opencircle_triangle
         self.width = width
         self.height = height
         self.acceptable = float(acceptable)

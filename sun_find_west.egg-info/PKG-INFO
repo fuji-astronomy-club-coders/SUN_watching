@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: sun_find_west
+Version: 1.0.0
+Requires-Python: >=3.13
+License-File: LICENSE
+Requires-Dist: PyYAML>=6.0
+Requires-Dist: jsonschema>=4.18
+Requires-Dist: matplotlib==3.11.1
+Requires-Dist: PyQt6>=6.7
+Requires-Dist: numpy==2.5.3
+Requires-Dist: opencv-python==5.0.0.93
+Requires-Dist: scikit-learn==1.9.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
+Requires-Dist: ruff>=0.13; extra == "dev"
+Requires-Dist: basedpyright>=1.31; extra == "dev"
+Dynamic: license-file

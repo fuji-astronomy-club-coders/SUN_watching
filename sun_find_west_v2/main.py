@@ -277,6 +277,8 @@ class SunTrackerApp:
         csv_file_path: Path,
         cap_dir: Path,
         img_info: tuple[int, int, int],
+        initial_gain: int,
+        initial_exposure: int,
     ) -> None:
         """アプリのカメラ、描画、保存先、画像形式を初期化する。
 
@@ -294,13 +296,24 @@ class SunTrackerApp:
             手動キャプチャ画像を保存するディレクトリ。
         img_info : tuple[int, int, int]
             width、height、img_type からなるカメラの ROI 情報。
+        initial_gain : int
+            ゲインスライダーの初期値。設定ファイルの Camera の値を渡す。
+        initial_exposure : int
+            露出スライダーの初期値(µs)。設定ファイルの Camera の値を渡す。
         """
         self.camera = camera
         self.viz = viz
         self.buf_lookback = int(main_param["Analyzer"]["buf_lookback"])
+        min2 = main_param["MIN2ver2"]
+        self.min2_n = int(min2["n"])
+        self.min2_light_threshold = int(min2["light_threshod"])
+        self.min2_limb_width = int(min2["limb_wigth"])
+        self.min2_iter_cycles = int(min2["iter_cycles"])
         self.csv_file_path = csv_file_path
         self.cap_dir = cap_dir
         self.width, self.height, self.img_type = img_info
+        self.initial_gain = initial_gain
+        self.initial_exposure = initial_exposure
 
         # 状態・軌跡バッファ管理
         self.frame_count = 0
@@ -337,17 +350,17 @@ class SunTrackerApp:
             name="gain",
             label="Gain (dB)",
             valmin=0,
-            valmax=300,
-            valinit=150,
+            valmax=400,
+            valinit=self.initial_gain,
             valfmt="%1.0f",
             on_change=lambda val: handle_config(self.camera, asi.ASI_GAIN, val),
         )
         self.viz.add_slider(
             name="exposure",
             label="Exposure (µs=1e-6s)",
-            valmin=1000,
-            valmax=100000,
-            valinit=30000,
+            valmin=32,
+            valmax=20000,
+            valinit=self.initial_exposure,
             valfmt="%1.0f",
             on_change=lambda val: handle_config(self.camera, asi.ASI_EXPOSURE, val),
         )
@@ -432,7 +445,13 @@ class SunTrackerApp:
 
                     # 1. 太陽中心の解析
                     try:
-                        (cx, cy), r = MIN2(img)
+                        (cx, cy), r = MIN2(
+                            img,
+                            n=self.min2_n,
+                            light_threshold=self.min2_light_threshold,
+                            limb_wigth=self.min2_limb_width,
+                            iter_cycles=self.min2_iter_cycles,
+                        )
                     except Exception as e:
                         logger.warning(f"MIN2 processing error: {e}")
                         self.dropped_frames += 1
@@ -660,6 +679,8 @@ def main(config: dict) -> None:
         csv_file_path=csv_file_path,
         cap_dir=cap_dir,
         img_info=(width, height, img_type),
+        initial_gain=int(camera_param["basic_parameters"]["gain"]),
+        initial_exposure=int(camera_param["basic_parameters"]["exposure"]),
     )
 
     app.run(CSV_HEADERS)
