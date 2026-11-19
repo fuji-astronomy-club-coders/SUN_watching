@@ -75,10 +75,11 @@ CI(`.github/workflows/ci.yml`)では依存関係チェック、Ruff、basedpyrig
 
 ## Windows 11向け配布物の作成
 
-Windows 11 x64向けの配布物は、GitHub Actionsの `Build Windows distribution` を手動実行すると作成できます。Actionsの実行結果から、次の2種類をダウンロードできます。
+Windows 11 x64向けの配布物は、GitHub Actionsの `Build Windows distribution` を手動実行すると作成できます。Actionsの実行結果から、次のファイルをダウンロードできます。
 
 - `SUN_watching-windows-x64.zip` ... 展開して `SUN_watching.exe` を実行するポータブル版
 - `SUN_watching-setup-windows-x64.exe` ... Inno Setupによるインストーラー
+- `SHA256SUMS.txt` ... 上記2ファイルのSHA-256ハッシュ
 
 リポジトリに `v1.0.0` のようなタグをpushした場合は、同じファイルがGitHub Releaseにも自動添付されます。ビルドはPython 3.13 x64、Windows Server 2022 runnerで行うため、Windows 11 x64での利用を対象にしています。ASIカメラを使用する場合は、別途ZWO公式のCamera DriverをWindowsへインストールしてください。初回確認は `config.yaml` の `dummy_camera: true` による動画入力を推奨します。
 
