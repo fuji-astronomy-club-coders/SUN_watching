@@ -111,7 +111,9 @@ python -c "import struct; print(struct.calcsize('P') * 8)"
        dummy_camera: false
    ```
 
-4. 起動する。
+4. 太陽観測用にカメラの値を確認・調整する。ND フィルタ(ND5.0 など)を使用する場合、設定ファイルのコメントに記載された露出 100〜1000 µs、ゲイン 0 を初期目安とし、使用するカメラやフィルタに合わせて調整する。
+
+5. 起動する。
 
    ```bash
    python run.py
