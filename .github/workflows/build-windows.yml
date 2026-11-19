@@ -17,6 +17,11 @@ jobs:
   build-windows:
     runs-on: windows-2022
     timeout-minutes: 30
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      zip: ${{ steps.meta.outputs.zip }}
+      installer: ${{ steps.meta.outputs.installer }}
+      checksums: ${{ steps.meta.outputs.checksums }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -27,6 +32,17 @@ jobs:
           python-version: "3.13"
           architecture: "x64"
           cache: "pip"
+
+      - name: Resolve version and artifact names
+        id: meta
+        shell: pwsh
+        run: |
+          $version = python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])"
+          Write-Host "Version: $version"
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "zip=SUN_watching-${version}-windows-x64.zip" >> $env:GITHUB_OUTPUT
+          "installer=SUN_watching-${version}-setup-windows-x64.exe" >> $env:GITHUB_OUTPUT
+          "checksums=SUN_watching-${version}-SHA256SUMS.txt" >> $env:GITHUB_OUTPUT
 
       - name: Install build dependencies
         shell: pwsh
@@ -60,33 +76,40 @@ jobs:
 
       - name: Create ZIP package
         shell: pwsh
-        run: Compress-Archive -Path dist\SUN_watching\* -DestinationPath dist\SUN_watching-windows-x64.zip -Force
+        env:
+          ZIP: ${{ steps.meta.outputs.zip }}
+        run: Compress-Archive -Path dist\SUN_watching\* -DestinationPath "dist\$env:ZIP" -Force
 
       - name: Create installer
         shell: pwsh
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          $version = python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])"
-          Write-Host "Building installer version $version"
-          iscc "/DAppVersion=$version" packaging\SUN_watching.iss
+          Write-Host "Building installer version $env:VERSION"
+          iscc "/DAppVersion=$env:VERSION" packaging\SUN_watching.iss
 
       - name: Generate checksums
         shell: pwsh
+        env:
+          ZIP: ${{ steps.meta.outputs.zip }}
+          INSTALLER: ${{ steps.meta.outputs.installer }}
+          CHECKSUMS: ${{ steps.meta.outputs.checksums }}
         run: |
           Get-FileHash -Algorithm SHA256 `
-            dist\SUN_watching-windows-x64.zip, `
-            dist\installer\SUN_watching-setup-windows-x64.exe |
+            "dist\$env:ZIP", `
+            "dist\installer\$env:INSTALLER" |
             ForEach-Object {
               "{0}  {1}" -f $_.Hash.ToLowerInvariant(), (Split-Path $_.Path -Leaf)
-            } | Tee-Object -FilePath dist\SHA256SUMS.txt
+            } | Tee-Object -FilePath "dist\$env:CHECKSUMS"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: SUN_watching-windows-x64
+          name: SUN_watching-${{ steps.meta.outputs.version }}-windows-x64
           path: |
-            dist/SUN_watching-windows-x64.zip
-            dist/installer/SUN_watching-setup-windows-x64.exe
-            dist/SHA256SUMS.txt
+            dist/${{ steps.meta.outputs.zip }}
+            dist/installer/${{ steps.meta.outputs.installer }}
+            dist/${{ steps.meta.outputs.checksums }}
           if-no-files-found: error
           retention-days: 14
 
@@ -101,7 +124,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v8
         with:
-          name: SUN_watching-windows-x64
+          name: SUN_watching-${{ needs.build-windows.outputs.version }}-windows-x64
           path: dist
 
       - name: Create GitHub release for version tag
@@ -109,6 +132,6 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            dist/SUN_watching-windows-x64.zip
-            dist/installer/SUN_watching-setup-windows-x64.exe
-            dist/SHA256SUMS.txt
+            dist/${{ needs.build-windows.outputs.zip }}
+            dist/installer/${{ needs.build-windows.outputs.installer }}
+            dist/${{ needs.build-windows.outputs.checksums }}
