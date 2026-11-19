@@ -43,8 +43,8 @@ python run.py --config path/to/config.yaml # 別の設定ファイルを使う
 | `Camera` | 露出・ゲイン・転送設定など ASI カメラのパラメータ |
 | `Run.camera_source.dummy_camera` | `true` でダミーカメラ(動画再生)、`false` で実機 ASI カメラ |
 | `sun_find_west_v2.Analyzer` | 許容角度 `acceptable`、軌道推定に使うフレーム数 `buf_lookback` |
-| `sun_find_west_v2.MIN2ver2` | 太陽検出のパラメータ(現状は検証のみで、検出処理には反映されません) |
-| `sun_find_west_v2.Visualizer` | 画面のグリッド色・分割数・透明度など(`opencircle_triangle` は PyQt6 版では未使用) |
+| `sun_find_west_v2.MIN2ver2` | 太陽検出のパラメータ(格子分割数・しきい値・縁の幅・黒点除外の回数) |
+| `sun_find_west_v2.Visualizer` | 画面のグリッド色・分割数・透明度など |
 
 ## ディレクトリ構成
 
