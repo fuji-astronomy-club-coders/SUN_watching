@@ -100,7 +100,6 @@ python run.py --config path/to/my_config.yaml
 
 - `grid_color` は `"#FFFFFF"` のように引用符で囲む(`#` が YAML のコメントになるため)。
 - `light_threshod`、`limb_wigth` は綴りのまま書く。
-- `MIN2ver2` セクションの値は検証されるが、現状は太陽検出に反映されない。
 
 ## 6. 出力の場所
 
@@ -132,7 +131,7 @@ QT_QPA_PLATFORM=offscreen python -m pytest   # テスト(Windows の PowerShell 
 | `動画ファイルを開けませんでした` | 動画の形式・コーデックが OpenCV で読めない。`.mp4` などに変換するか `.ser` を使う |
 | `zwoasi がインストールされていません` | 実機モードで `zwoasi` が未導入。`pip install zwoasi` するか `dummy_camera: true` に戻す |
 | `DLL not found` と出て Enter 待ちになる | `sun_find_west_v2/camera/bin/ASICamera2.dll` が無い。64bit 版を置く |
-| 太陽の検出に失敗し続ける(Dropped が増える) | 露出・ゲインを調整して太陽の縁がはっきり写るようにする(`MIN2ver2` の設定値は現状は検出に反映されないため、ここでは調整できない) |
+| 太陽の検出に失敗し続ける(Dropped が増える) | 露出・ゲインを調整して太陽の縁がはっきり写るようにする。それでも検出できなければ `MIN2ver2` の `light_threshod`、`limb_wigth` を調整する |
 | 角度が `N/A`(INSUFFICIENT DATA) のまま | 解析点が 3 点未満、または角度計算に失敗している。しばらく撮影を続けるか、ログの警告を確認する |
 | ずれの表示が安定しない | `buf_lookback` を増やして平均する時間を長くする。軌跡が短すぎると推定がぶれる |
 | 画面が固まる / PyQt6 が起動しない | ヘッドレス環境(ディスプレイ無し)では起動できない。デスクトップ環境で実行する |
