@@ -121,11 +121,37 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Check tag matches project version
+        shell: bash
+        env:
+          VERSION: ${{ needs.build-windows.outputs.version }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$tag" != "$VERSION" ]; then
+            echo "::error::Tag '$tag' does not match pyproject.toml version '$VERSION'."
+            exit 1
+          fi
+          echo "Tag $GITHUB_REF_NAME matches version $VERSION."
+
       - name: Download build artifacts
         uses: actions/download-artifact@v8
         with:
           name: SUN_watching-${{ needs.build-windows.outputs.version }}-windows-x64
           path: dist
+
+      - name: Verify release assets
+        shell: bash
+        env:
+          ZIP: ${{ needs.build-windows.outputs.zip }}
+          INSTALLER: ${{ needs.build-windows.outputs.installer }}
+          CHECKSUMS: ${{ needs.build-windows.outputs.checksums }}
+        run: |
+          set -euo pipefail
+          test -f "dist/$ZIP"
+          test -f "dist/installer/$INSTALLER"
+          test -f "dist/$CHECKSUMS"
+          ls -lh "dist/$ZIP" "dist/installer/$INSTALLER" "dist/$CHECKSUMS"
 
       - name: Create GitHub release for version tag
         uses: softprops/action-gh-release@v2
