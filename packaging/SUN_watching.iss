@@ -1,5 +1,7 @@
 #define AppName "SUN_watching"
-#define AppVersion "1.0.0"
+#ifndef AppVersion
+  #define AppVersion "1.9.0"
+#endif
 #define AppPublisher "fuji-astronomy-club-coders"
 #define AppExeName "SUN_watching.exe"
 
@@ -10,8 +12,8 @@ AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
 DefaultDirName={autopf}\SUN_watching
 DefaultGroupName={#AppName}
-OutputDir=dist\installer
-OutputBaseFilename=SUN_watching-setup-windows-x64
+OutputDir=..\dist\installer
+OutputBaseFilename=SUN_watching-{#AppVersion}-setup-windows-x64
 Compression=lzma2
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64
@@ -19,7 +21,7 @@ WizardStyle=modern
 UninstallDisplayIcon={app}\{#AppExeName}
 
 [Files]
-Source: "dist\SUN_watching\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\SUN_watching\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\SUN_watching"; Filename: "{app}\{#AppExeName}"
