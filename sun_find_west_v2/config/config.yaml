@@ -65,5 +65,3 @@ sun_find_west_v2:
     grid_r: 300
     # 画像グリッドの透明度(alpha)
     grid_alpha: 0.4
-    # 西との角度差を表示する円弧に矢印をつける
-    opencircle_triangle: false

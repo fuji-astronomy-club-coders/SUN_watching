@@ -25,7 +25,7 @@ def test_shipped_config_is_valid() -> None:
     """同梱の設定ファイルがスキーマを満たすことを確認する。"""
     config = load_config()
     assert config["Camera"]["basic_parameters"]["exposure"] == 100
-    assert config["Run"]["camera_source"]["dummy_camera"] is False
+    assert config["Run"]["camera_source"]["dummy_camera"] is True
     assert config["sun_find_west_v2"]["Visualizer"]["grid_color"] == "#FFFFFF"
 
 

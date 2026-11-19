@@ -137,7 +137,6 @@ python run.py --config path/to/my_config.yaml
 
 - `grid_color` は `"#FFFFFF"` のように引用符で囲む(`#` が YAML のコメントになるため)。
 - `light_threshod`、`limb_wigth` は綴りのまま書く。
-- `MIN2ver2` セクションの値は検証されるが、現状は太陽検出に反映されない。
 
 ## 6. 出力の場所
 
