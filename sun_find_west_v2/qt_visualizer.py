@@ -453,6 +453,14 @@ class Visualizer:
             max(0.0, self._view_center_y - view_height / 2.0),
             max(0.0, self.height - view_height),
         )
+        if self._zoom_factor > 1.0:
+            # Snap to whole pixels so the geometry used for pointer mapping matches
+            # the crop that _render_image actually draws.
+            x0 = max(0, min(self.width - 1, int(round(left))))
+            y0 = max(0, min(self.height - 1, int(round(top))))
+            crop_width = max(1, min(self.width - x0, int(round(view_width))))
+            crop_height = max(1, min(self.height - y0, int(round(view_height))))
+            return float(x0), float(y0), float(crop_width), float(crop_height)
         return left, top, view_width, view_height
 
     def _display_geometry(
