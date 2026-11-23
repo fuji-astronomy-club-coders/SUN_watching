@@ -96,6 +96,10 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "Frozen executable failed --check-config (exit=$LASTEXITCODE)"
           }
+          & "dist\SUN_watching\SUN_watching.exe" --check-imports
+          if ($LASTEXITCODE -ne 0) {
+            throw "Frozen executable failed --check-imports (exit=$LASTEXITCODE)"
+          }
           foreach ($dir in @("log", "data", "data\report")) {
             if (-not (Test-Path -LiteralPath (Join-Path $smokeHome $dir))) {
               throw "Missing runtime directory: $dir"
@@ -145,6 +149,10 @@ jobs:
           & "$installDir\SUN_watching.exe" --check-config
           if ($LASTEXITCODE -ne 0) {
             throw "Installed executable failed --check-config (exit=$LASTEXITCODE)"
+          }
+          & "$installDir\SUN_watching.exe" --check-imports
+          if ($LASTEXITCODE -ne 0) {
+            throw "Installed executable failed --check-imports (exit=$LASTEXITCODE)"
           }
           foreach ($dir in @("log", "data", "data\report")) {
             if (-not (Test-Path -LiteralPath (Join-Path $smokeHome $dir))) {

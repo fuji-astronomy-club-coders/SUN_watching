@@ -14,13 +14,13 @@ print("Booting up the system…")
 print("Setting up logger…")
 
 try:
-    from .paths import DLL_PATH, LOG_DIR, REPORT_DIR, ensure_runtime_directories
+    from .paths import DLL_PATH, ensure_runtime_directories, log_dir, report_dir
 except ImportError:  # PyInstaller 配布物では main がトップレベルモジュールになる
     from paths import (  # pyright: ignore[reportMissingImports]
         DLL_PATH,
-        LOG_DIR,
-        REPORT_DIR,
         ensure_runtime_directories,
+        log_dir,
+        report_dir,
     )
 
 ensure_runtime_directories()
@@ -28,10 +28,10 @@ ensure_runtime_directories()
 print("setting logger...")
 dt = datetime.datetime.now().strftime("%Y%m%d")
 ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-reports_path = REPORT_DIR / f"{dt}"
+reports_path = report_dir() / f"{dt}"
 reports_path.mkdir(parents=True, exist_ok=True)
 
-logfile = LOG_DIR / f"sunfindwestV2_{ts}.log"
+logfile = log_dir() / f"sunfindwestV2_{ts}.log"
 
 log_format = "%(asctime)s [%(levelname)s] %(name)s %(funcName)s: %(message)s"
 formatter = logging.Formatter(log_format)

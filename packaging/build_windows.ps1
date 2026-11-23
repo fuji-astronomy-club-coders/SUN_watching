@@ -23,6 +23,13 @@ foreach ($path in $required) {
   if (-not (Test-Path -LiteralPath $path)) { throw "Missing packaged file: $path" }
 }
 
+# 同梱物が揃っていても起動時 import が壊れていないか確認する。
+$env:SUN_WATCHING_HOME = Join-Path $env:TEMP "SUN_watching_smoke_home"
+& "$root\dist\SUN_watching\SUN_watching.exe" --check-config
+if ($LASTEXITCODE -ne 0) { throw "Frozen executable failed --check-config (exit=$LASTEXITCODE)" }
+& "$root\dist\SUN_watching\SUN_watching.exe" --check-imports
+if ($LASTEXITCODE -ne 0) { throw "Frozen executable failed --check-imports (exit=$LASTEXITCODE)" }
+
 $version = (Get-Date -Format "yyyyMMdd-HHmmss")
 $distDir = Join-Path $root "dist\SUN_watching"
 $zipPath = Join-Path $root "dist\SUN_watching-windows-x64-$version.zip"

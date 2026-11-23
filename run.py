@@ -46,6 +46,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="設定とスキーマだけを検証して終了する (配布物の動作確認用)",
     )
+    parser.add_argument(
+        "--check-imports",
+        action="store_true",
+        help="起動に必要なモジュールを import できるか確認して終了する (配布物の動作確認用)",
+    )
     return parser.parse_args(argv)
 
 
@@ -75,6 +80,12 @@ def main() -> None:
 
     if args.check_config:
         print("[run.py] OK: config and schema are valid")
+        return
+
+    if args.check_imports:
+        from main import main as _run_main  # noqa: F401  # pyright: ignore[reportMissingImports]
+
+        print("[run.py] OK: startup modules imported successfully")
         return
 
     from main import main as run_main  # pyright: ignore[reportMissingImports]
