@@ -13,11 +13,17 @@ try { python -m pip install zwoasi } catch { Write-Warning "zwoasi could not be 
 Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
 python -m PyInstaller --noconfirm --clean SUN_watching.spec
 
+$null = [scriptblock]::Create((Get-Content -LiteralPath "packaging\install-asi-driver.ps1" -Raw))
+$tools = "dist\SUN_watching\tools"
+New-Item -ItemType Directory -Force -Path $tools | Out-Null
+Copy-Item -LiteralPath "packaging\install-asi-driver.ps1" -Destination (Join-Path $tools "install-asi-driver.ps1") -Force
+
 $required = @(
   "dist\SUN_watching\SUN_watching.exe",
   "dist\SUN_watching\_internal\config\config.yaml",
   "dist\SUN_watching\_internal\config\config_schema.json",
-  "dist\SUN_watching\_internal\camera\bin\ASICamera2.dll"
+  "dist\SUN_watching\_internal\camera\bin\ASICamera2.dll",
+  "dist\SUN_watching\tools\install-asi-driver.ps1"
 )
 foreach ($path in $required) {
   if (-not (Test-Path -LiteralPath $path)) { throw "Missing packaged file: $path" }

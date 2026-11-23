@@ -70,9 +70,37 @@ jobs:
         shell: pwsh
         run: Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
 
+      - name: Validate driver installation helper
+        shell: pwsh
+        run: |
+          $scriptPath = "packaging\install-asi-driver.ps1"
+          $null = [scriptblock]::Create((Get-Content -LiteralPath $scriptPath -Raw))
+          Write-Host "PowerShell syntax OK: $scriptPath"
+
+      - name: Verify ZWO driver download and signature
+        shell: pwsh
+        run: |
+          # インストール時に取得するドライバの URL と署名を事前確認する。
+          # ZWO 側の一時的な障害でビルドを止めないよう、失敗時は警告のみにする。
+          try {
+            & powershell -NoProfile -ExecutionPolicy Bypass -File packaging\install-asi-driver.ps1 -CheckOnly
+            if ($LASTEXITCODE -ne 0) {
+              throw "install-asi-driver.ps1 -CheckOnly failed (exit=$LASTEXITCODE)"
+            }
+          } catch {
+            Write-Warning "ZWO ドライバのダウンロード検証に失敗しました: $($_.Exception.Message)"
+          }
+
       - name: Build executable directory
         shell: pwsh
         run: python -m PyInstaller --noconfirm --clean SUN_watching.spec
+
+      - name: Stage driver installation helper
+        shell: pwsh
+        run: |
+          $tools = "dist\SUN_watching\tools"
+          New-Item -ItemType Directory -Force -Path $tools | Out-Null
+          Copy-Item -LiteralPath "packaging\install-asi-driver.ps1" -Destination (Join-Path $tools "install-asi-driver.ps1") -Force
 
       - name: Verify packaged files and runtime config
         shell: pwsh
@@ -81,7 +109,8 @@ jobs:
             "dist\SUN_watching\SUN_watching.exe",
             "dist\SUN_watching\_internal\config\config.yaml",
             "dist\SUN_watching\_internal\config\config_schema.json",
-            "dist\SUN_watching\_internal\camera\bin\ASICamera2.dll"
+            "dist\SUN_watching\_internal\camera\bin\ASICamera2.dll",
+            "dist\SUN_watching\tools\install-asi-driver.ps1"
           )
           foreach ($path in $required) {
             if (-not (Test-Path -LiteralPath $path)) {
@@ -133,6 +162,7 @@ jobs:
             "/VERYSILENT",
             "/NORESTART",
             "/SP-",
+            "/MERGETASKS=!asidriver",
             "/LOG=`"$installLog`"",
             "/DIR=`"$installDir`""
           )
@@ -158,6 +188,9 @@ jobs:
             if (-not (Test-Path -LiteralPath (Join-Path $smokeHome $dir))) {
               throw "Missing runtime directory after install: $dir"
             }
+          }
+          if (-not (Test-Path -LiteralPath (Join-Path $installDir "tools\install-asi-driver.ps1"))) {
+            throw "Missing installed driver helper: tools\install-asi-driver.ps1"
           }
 
       - name: Generate checksums

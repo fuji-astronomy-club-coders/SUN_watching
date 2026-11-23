@@ -1,6 +1,6 @@
 #define AppName "SUN_watching"
 #ifndef AppVersion
-  #define AppVersion "1.9.2"
+  #define AppVersion "1.9.3"
 #endif
 #define AppPublisher "fuji-astronomy-club-coders"
 #define AppExeName "SUN_watching.exe"
@@ -39,6 +39,43 @@ Name: "{autodesktop}\SUN_watching"; Filename: "{app}\{#AppExeName}"; Tasks: desk
 
 [Tasks]
 Name: "desktopicon"; Description: "デスクトップにショートカットを作成"; GroupDescription: "追加タスク:"
+; 既定でチェックする。ドライバ本体は同梱せず、インストール時に公式サイトから取得する。
+; サイレント導入で不要な場合は /TASKS="" を指定してスキップできる。
+Name: "asidriver"; Description: "ZWO ASI カメラドライバを公式サイトからダウンロードしてインストール (管理者権限とネットワークが必要)"; GroupDescription: "追加タスク:"
 
 [Run]
 Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Description: "SUN_watchingを起動"; Flags: postinstall nowait skipifsilent
+
+[Code]
+const
+  AsiDriverTask = 'asidriver';
+
+procedure InstallAsiDriver();
+var
+  ScriptPath: String;
+  Params: String;
+  ResultCode: Integer;
+begin
+  ScriptPath := ExpandConstant('{app}\tools\install-asi-driver.ps1');
+  if not FileExists(ScriptPath) then
+  begin
+    MsgBox('ZWO ASI ドライバ用スクリプトが見つかりません: ' + ScriptPath, mbError, MB_OK);
+    exit;
+  end;
+
+  Params := '-NoProfile -ExecutionPolicy Bypass -File "' + ScriptPath + '"';
+  if not ShellExec('open', ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), Params, '', SW_SHOW, ewWaitUntilTerminated, ResultCode) then
+  begin
+    MsgBox('ZWO ASI ドライバのインストールを開始できませんでした。' + #13#10 + '公式サイトから手動でインストールしてください: https://www.zwoastro.com/software/camera-driver/', mbError, MB_OK);
+    exit;
+  end;
+
+  if ResultCode <> 0 then
+    MsgBox('ZWO ASI ドライバのインストールに失敗しました (終了コード ' + IntToStr(ResultCode) + ')。' + #13#10 + '公式サイトから手動でインストールしてください: https://www.zwoastro.com/software/camera-driver/', mbError, MB_OK);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep = ssPostInstall) and WizardIsTaskSelected(AsiDriverTask) then
+    InstallAsiDriver();
+end;

@@ -77,7 +77,7 @@ CI(`.github/workflows/ci.yml`)では依存関係チェック、Ruff、basedpyrig
 
 Windows 11 x64向けの配布物は、GitHub Actionsの `Build Windows distribution` を手動実行すると作成できます。Actionsの実行結果から、次のファイルをダウンロードできます。
 
-ファイル名には `pyproject.toml` のバージョンが入ります（例: `1.9.2`）。
+ファイル名には `pyproject.toml` のバージョンが入ります（例: `1.9.3`）。
 
 - `SUN_watching-<バージョン>-windows-x64.zip` ... 展開して `SUN_watching.exe` を実行するポータブル版
 - `SUN_watching-<バージョン>-setup-windows-x64.exe` ... Inno Setupによるインストーラー
@@ -87,7 +87,13 @@ Windows 11 x64向けの配布物は、GitHub Actionsの `Build Windows distribut
 
 配布物の動作確認には `SUN_watching.exe --check-config` を使えます。これは設定ファイルと `config_schema.json` の検証だけを行い、画面を開かずに終了します。
 
-リポジトリに `v1.9.2` のようなタグをpushした場合は、同じファイルがGitHub Releaseにも自動添付されます。ビルドはPython 3.13 x64、Windows Server 2022 runnerで行うため、Windows 11 x64での利用を対象にしています。ASIカメラを使用する場合は、別途ZWO公式のCamera DriverをWindowsへインストールしてください。初回確認は `config.yaml` の `dummy_camera: true` による動画入力を推奨します。
+インストーラーには「ZWO ASI カメラドライバを公式サイトからダウンロードしてインストール」という任意タスクがあり、既定でチェックされています。このタスクを選択すると、インストール時に ZWO 公式サイトから Camera Driver を取得し、Authenticode 署名を検証したうえで管理者権限で導入します（UAC の確認とネットワーク接続が必要です）。ドライバ本体は再配布せず、公式配布物をそのまま取得します。不要な場合はタスクのチェックを外してください。ポータブル版（ZIP）には `tools\install-asi-driver.ps1` が含まれるので、必要な場合は管理者権限の PowerShell から次を実行します。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\install-asi-driver.ps1
+```
+
+リポジトリに `v1.9.3` のようなタグをpushした場合は、同じファイルがGitHub Releaseにも自動添付されます。ビルドはPython 3.13 x64、Windows Server 2022 runnerで行うため、Windows 11 x64での利用を対象にしています。ASIカメラを使用する場合は上記タスクまたはスクリプトでネイティブドライバを導入してください（`zwoasi` は実行ファイルに同梱済みです）。初回確認は `config.yaml` の `dummy_camera: true` による動画入力を推奨します。
 
 ## ライセンス
 

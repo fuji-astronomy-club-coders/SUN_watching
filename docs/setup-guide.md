@@ -65,6 +65,14 @@ python -m pip install -e ".[dev]"
 
 ### 4.1 ZWO ASI Camera Driver のインストール
 
+Windows 配布物のインストーラーを使う場合、「ZWO ASI カメラドライバを公式サイトからダウンロードしてインストール」タスク（既定でチェック）を選択すると、インストール時に公式サイトから取得して自動で導入されます。このとき UAC の確認とネットワーク接続が必要です。チェックを外した場合や、ポータブル版（ZIP）を使う場合は、次の手順を実行してください。ポータブル版には `tools\install-asi-driver.ps1` が含まれており、管理者権限の PowerShell から実行することでも導入できます。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\install-asi-driver.ps1
+```
+
+手動で導入する場合:
+
 1. [ZWO公式 Camera Driver ダウンロードページ](https://www.zwoastro.com/software/camera-driver/) を開く。
 2. Windows 用の **Camera Driver** をダウンロードする。公開されている最新版を使用する。
    - WindowsでASIカメラを使用するには、このネイティブドライバが必要です。
@@ -82,7 +90,7 @@ python -m pip install -e ".[dev]"
 python -m pip install zwoasi
 ```
 
-`zwoasi` はPythonからASIカメラを操作するためのライブラリです。上記のWindows用ネイティブドライバの代わりにはならないため、**両方をインストールしてください**。
+`zwoasi` はPythonからASIカメラを操作するためのライブラリです。上記のWindows用ネイティブドライバの代わりにはならないため、**両方をインストールしてください**。Windows 配布物の実行ファイルには `zwoasi` が同梱済みのため、配布物を使う場合はこの手順は不要です。
 
 Pythonが64bit版であることも確認する。
 
