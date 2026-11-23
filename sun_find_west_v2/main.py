@@ -12,28 +12,26 @@ from typing import Any, NoReturn, Protocol
 
 print("Booting up the system…")
 print("Setting up logger…")
-print("setting root path...")
-# パス解決と初期設定
-current = Path(__file__).resolve()
-for parent in [current.parent, *current.parents]:
-    if parent.name == "sun_find_west_v2":
-        root_path = parent
-        sys.path.append(str(root_path))
-        break
-    else:
-        print(
-            "[FATAL] The folder 'sun_find_west_v2' was not found in the parent directory."
-        )
-        sys.exit(1)
+
+try:
+    from .paths import DLL_PATH, LOG_DIR, REPORT_DIR, ensure_runtime_directories
+except ImportError:  # PyInstaller 配布物では main がトップレベルモジュールになる
+    from paths import (  # pyright: ignore[reportMissingImports]
+        DLL_PATH,
+        LOG_DIR,
+        REPORT_DIR,
+        ensure_runtime_directories,
+    )
+
+ensure_runtime_directories()
 
 print("setting logger...")
 dt = datetime.datetime.now().strftime("%Y%m%d")
 ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-reports_path = root_path.parent / "report" / f"{dt}"  # pyright: ignore[reportPossiblyUnboundVariable]
+reports_path = REPORT_DIR / f"{dt}"
 reports_path.mkdir(parents=True, exist_ok=True)
 
-logfile = reports_path / "logs" / f"sunfindwestV2_{ts}.log"
-logfile.parent.mkdir(parents=True, exist_ok=True)
+logfile = LOG_DIR / f"sunfindwestV2_{ts}.log"
 
 log_format = "%(asctime)s [%(levelname)s] %(name)s %(funcName)s: %(message)s"
 formatter = logging.Formatter(log_format)
@@ -621,7 +619,7 @@ def main(config: dict) -> None:
     logger.info("Attempting to connect to the camera...")
     camera = None
     try:
-        env_filename = root_path / "camera" / "bin" / "ASICamera2.dll"
+        env_filename = DLL_PATH
         os.environ["ZWO_ASI_LIB"] = str(env_filename)
         logger.debug(
             f"Successfully set ZWO_ASI_LIB environment variable:{env_filename}"

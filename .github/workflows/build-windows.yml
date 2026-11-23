@@ -74,6 +74,34 @@ jobs:
         shell: pwsh
         run: python -m PyInstaller --noconfirm --clean SUN_watching.spec
 
+      - name: Verify packaged files and runtime config
+        shell: pwsh
+        run: |
+          $required = @(
+            "dist\SUN_watching\SUN_watching.exe",
+            "dist\SUN_watching\_internal\config\config.yaml",
+            "dist\SUN_watching\_internal\config\config_schema.json",
+            "dist\SUN_watching\_internal\camera\bin\ASICamera2.dll"
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "Missing packaged file: $path"
+            }
+          }
+
+          $smokeHome = Join-Path $env:RUNNER_TEMP "SUN_watching_smoke_home"
+          Remove-Item -Recurse -Force $smokeHome -ErrorAction SilentlyContinue
+          $env:SUN_WATCHING_HOME = $smokeHome
+          & "dist\SUN_watching\SUN_watching.exe" --check-config
+          if ($LASTEXITCODE -ne 0) {
+            throw "Frozen executable failed --check-config (exit=$LASTEXITCODE)"
+          }
+          foreach ($dir in @("log", "data", "data\report")) {
+            if (-not (Test-Path -LiteralPath (Join-Path $smokeHome $dir))) {
+              throw "Missing runtime directory: $dir"
+            }
+          }
+
       - name: Create ZIP package
         shell: pwsh
         env:
@@ -87,6 +115,42 @@ jobs:
         run: |
           Write-Host "Building installer version $env:VERSION"
           iscc "/DAppVersion=$env:VERSION" packaging\SUN_watching.iss
+
+      - name: Verify per-user installer without PATH changes
+        shell: pwsh
+        env:
+          INSTALLER: ${{ steps.meta.outputs.installer }}
+        run: |
+          $installDir = Join-Path $env:RUNNER_TEMP "SUN_watching_installed"
+          $installLog = Join-Path $env:RUNNER_TEMP "SUN_watching_install.log"
+          Remove-Item -Recurse -Force $installDir, $installLog -ErrorAction SilentlyContinue
+
+          $process = Start-Process -FilePath "dist\installer\$env:INSTALLER" -Wait -PassThru -ArgumentList @(
+            "/VERYSILENT",
+            "/NORESTART",
+            "/SP-",
+            "/LOG=`"$installLog`"",
+            "/DIR=`"$installDir`""
+          )
+          if ($process.ExitCode -ne 0) {
+            if (Test-Path -LiteralPath $installLog) {
+              Get-Content -LiteralPath $installLog -Tail 80
+            }
+            throw "Installer failed with exit code $($process.ExitCode)"
+          }
+
+          $smokeHome = Join-Path $env:RUNNER_TEMP "SUN_watching_installed_home"
+          Remove-Item -Recurse -Force $smokeHome -ErrorAction SilentlyContinue
+          $env:SUN_WATCHING_HOME = $smokeHome
+          & "$installDir\SUN_watching.exe" --check-config
+          if ($LASTEXITCODE -ne 0) {
+            throw "Installed executable failed --check-config (exit=$LASTEXITCODE)"
+          }
+          foreach ($dir in @("log", "data", "data\report")) {
+            if (-not (Test-Path -LiteralPath (Join-Path $smokeHome $dir))) {
+              throw "Missing runtime directory after install: $dir"
+            }
+          }
 
       - name: Generate checksums
         shell: pwsh

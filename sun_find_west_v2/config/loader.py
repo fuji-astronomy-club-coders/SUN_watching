@@ -12,11 +12,12 @@ from typing import Any
 import yaml
 from jsonschema import Draft7Validator
 
-logger = logging.getLogger(__name__)
+try:
+    from .paths import DEFAULT_CONFIG_PATH, SCHEMA_PATH
+except ImportError:  # PyInstaller 配布物では config がトップレベルモジュールになる
+    from paths import DEFAULT_CONFIG_PATH, SCHEMA_PATH  # pyright: ignore[reportMissingImports]
 
-CONFIG_DIR = Path(__file__).resolve().parent
-DEFAULT_CONFIG_PATH = CONFIG_DIR / "config.yaml"
-SCHEMA_PATH = CONFIG_DIR / "config_schema.json"
+logger = logging.getLogger(__name__)
 
 
 class ConfigError(Exception):

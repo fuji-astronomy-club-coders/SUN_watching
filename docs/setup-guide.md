@@ -140,11 +140,14 @@ python run.py --config path/to/my_config.yaml
 
 ## 6. 出力の場所
 
-起動日ごとに `report/YYYYMMDD/` ができ、次が保存されます。
+ソースから実行した場合はリポジトリ直下、Windows 配布物では既定で `%LOCALAPPDATA%\SUN_watching` 以下に出力先を作ります。起動時に次のディレクトリが自動作成されるため、手作業での準備は不要です。
 
-- `logs/` ... 実行ログ
-- `sun_data_..._BYsunfindwestV2.csv` ... 解析結果(1フレーム1行)
-- `captures/` ... Capture ボタンで保存した画像
+- `log/` ... 実行ログ(`sunfindwestV2_YYYYMMDD_HHMMSS.log`)
+- `data/report/YYYYMMDD/` ... 起動日ごとのレポート
+  - `sun_data_..._BYsunfindwestV2.csv` ... 解析結果(1フレーム1行)
+  - `captures/` ... Capture ボタンで保存した画像
+
+別の出力先を使いたい場合は、起動前に環境変数 `SUN_WATCHING_HOME` を設定してください。配布物のインストーラーはユーザー単位に導入され、管理者権限や PATH 変更を必要としません。
 
 ## 7. 動作確認用コマンド(開発者向け)
 

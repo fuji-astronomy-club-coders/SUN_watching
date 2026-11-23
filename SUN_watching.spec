@@ -7,11 +7,28 @@ from PyInstaller.utils.hooks import collect_all
 ROOT = Path(SPEC).resolve().parent
 PACKAGE = ROOT / "sun_find_west_v2"
 
-# matplotlib / scikit-learn rely on package data and dynamic imports.
+CONFIG_DIR = PACKAGE / "config"
+CAMERA_BIN_DIR = PACKAGE / "camera" / "bin"
+
+# 同梱が欠けたまま配布物を作らないよう、ビルド前に必須ファイルを確認する。
+# (paths.py は配布物で _internal/config と _internal/camera/bin を参照する)
+required_files = [
+    CONFIG_DIR / "config.yaml",
+    CONFIG_DIR / "config_schema.json",
+    CAMERA_BIN_DIR / "ASICamera2.dll",
+]
+missing_files = [str(path) for path in required_files if not path.is_file()]
+if missing_files:
+    raise SystemExit(
+        "同梱するデータファイルが見つかりません: " + ", ".join(missing_files)
+    )
+
+# PyInstaller 配布物では config / camera / main などがトップレベルモジュールとして
+# 読み込まれるため、データファイルも同じ階層に配置する。
+# config は将来ファイルが増えても取りこぼさないようディレクトリごと同梱する。
 datas = [
-    (str(PACKAGE / "config" / "config.yaml"), "sun_find_west_v2/config"),
-    (str(PACKAGE / "config" / "config_schema.json"), "sun_find_west_v2/config"),
-    (str(PACKAGE / "camera" / "bin" / "ASICamera2.dll"), "sun_find_west_v2/camera/bin"),
+    (str(CONFIG_DIR), "config"),
+    (str(CAMERA_BIN_DIR), "camera/bin"),
 ]
 binaries = []
 hiddenimports = [
@@ -20,6 +37,7 @@ hiddenimports = [
     "camera.controller",
     "camera.vid_dummy",
     "config.loader",
+    "paths",
     "core.MIN2ver2",
     "core.RANSAC",
     "core.drawer",

@@ -9,6 +9,7 @@
 
     python run.py
     python run.py --config path/to/config.yaml
+    SUN_watching.exe --check-config
 """
 
 import argparse
@@ -30,7 +31,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     Returns
     -------
     argparse.Namespace
-        ``config`` に設定ファイルのパス(未指定なら None)を持つ。
+        ``config`` に設定ファイルのパス(未指定なら None)、
+        ``check_config`` に検証のみ行うかどうかを持つ。
     """
     parser = argparse.ArgumentParser(description="sun_find_west_v2 を起動する")
     parser.add_argument(
@@ -38,6 +40,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         type=Path,
         default=None,
         help="YAML設定ファイル (省略時は sun_find_west_v2/config/config.yaml)",
+    )
+    parser.add_argument(
+        "--check-config",
+        action="store_true",
+        help="設定とスキーマだけを検証して終了する (配布物の動作確認用)",
     )
     return parser.parse_args(argv)
 
@@ -55,6 +62,9 @@ def main() -> None:
         ConfigError,
         load_config,
     )
+    from paths import ensure_runtime_directories  # pyright: ignore[reportMissingImports]
+
+    ensure_runtime_directories()
 
     config_path = args.config or DEFAULT_CONFIG_PATH
     try:
@@ -62,6 +72,10 @@ def main() -> None:
     except ConfigError as e:
         sys.exit(f"[run.py] {e}")
     print(f"[run.py] config={config_path}")
+
+    if args.check_config:
+        print("[run.py] OK: config and schema are valid")
+        return
 
     from main import main as run_main  # pyright: ignore[reportMissingImports]
 

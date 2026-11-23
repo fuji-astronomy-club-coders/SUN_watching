@@ -13,6 +13,16 @@ try { python -m pip install zwoasi } catch { Write-Warning "zwoasi could not be 
 Remove-Item -Recurse -Force build, dist -ErrorAction SilentlyContinue
 python -m PyInstaller --noconfirm --clean SUN_watching.spec
 
+$required = @(
+  "dist\SUN_watching\SUN_watching.exe",
+  "dist\SUN_watching\_internal\config\config.yaml",
+  "dist\SUN_watching\_internal\config\config_schema.json",
+  "dist\SUN_watching\_internal\camera\bin\ASICamera2.dll"
+)
+foreach ($path in $required) {
+  if (-not (Test-Path -LiteralPath $path)) { throw "Missing packaged file: $path" }
+}
+
 $version = (Get-Date -Format "yyyyMMdd-HHmmss")
 $distDir = Join-Path $root "dist\SUN_watching"
 $zipPath = Join-Path $root "dist\SUN_watching-windows-x64-$version.zip"

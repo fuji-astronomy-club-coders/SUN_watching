@@ -129,13 +129,13 @@ PyQt6 のウィンドウ。左にカメラ映像、右に操作・数値パネ�
 
 ### 6.2 出力
 
-出力はすべてリポジトリ直下の `report/YYYYMMDD/` に作成される(`YYYYMMDD` は起動日)。
+出力先ルートはソース実行時はリポジトリ直下、Windows 配布物では `%LOCALAPPDATA%\SUN_watching`(環境変数 `SUN_WATCHING_HOME` で上書き可能)である。起動時に `log/`、`data/`、`data/report/` が作成される。`YYYYMMDD` は起動日。
 
-| 出力 | パス | 内容 |
+| 出力 | パス(出力先ルートからの相対) | 内容 |
 | --- | --- | --- |
-| ログ | `logs/sunfindwestV2_YYYYMMDD_HHMMSS.log` | DEBUG レベル以上。コンソールにも出力 |
-| 解析 CSV | `sun_data_YYYYMMDD_HHMMSS_BYsunfindwestV2.csv` | 1フレーム1行(下表) |
-| キャプチャ画像 | `captures/raw_YYYYMMDD_HHMMSS_mmm_f<フレーム番号>.png` | Capture ボタンで保存したフレーム(オーバーレイ無しの生画像) |
+| ログ | `log/sunfindwestV2_YYYYMMDD_HHMMSS.log` | DEBUG レベル以上。コンソールにも出力 |
+| 解析 CSV | `data/report/YYYYMMDD/sun_data_YYYYMMDD_HHMMSS_BYsunfindwestV2.csv` | 1フレーム1行(下表) |
+| キャプチャ画像 | `data/report/YYYYMMDD/captures/raw_YYYYMMDD_HHMMSS_mmm_f<フレーム番号>.png` | Capture ボタンで保存したフレーム(オーバーレイ無しの生画像) |
 
 CSV の列:
 
