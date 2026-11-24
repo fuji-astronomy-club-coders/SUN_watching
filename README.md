@@ -95,7 +95,7 @@ CI(`.github/workflows/ci.yml`)では依存関係チェック、Ruff、basedpyrig
 
 Windows 11 x64向けの配布物は、GitHub Actionsの `Build Windows distribution` を手動実行すると作成できます。Actionsの実行結果から、次のファイルをダウンロードできます。
 
-ファイル名には `pyproject.toml` のバージョンが入ります（例: `1.10.0`）。
+ファイル名には `pyproject.toml` のバージョンが入ります（例: `1.10.1`）。
 
 - `SUN_watching-<バージョン>-windows-x64.zip` ... 展開して `SUN_watching.exe` を実行するポータブル版
 - `SUN_watching-<バージョン>-setup-windows-x64.exe` ... Inno Setupによるインストーラー
@@ -111,7 +111,7 @@ Windows 11 x64向けの配布物は、GitHub Actionsの `Build Windows distribut
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\install-asi-driver.ps1
 ```
 
-リポジトリに `v1.10.0` のようなタグをpushした場合は、同じファイルがGitHub Releaseにも自動添付されます。ビルドはPython 3.13 x64、Windows Server 2022 runnerで行うため、Windows 11 x64での利用を対象にしています。ASIカメラを使用する場合は上記タスクまたはスクリプトでネイティブドライバを導入してください（`zwoasi` は実行ファイルに同梱済みです）。初回確認は `config.yaml` の `dummy_camera: true` による動画入力を推奨します。
+リポジトリに `v1.10.1` のようなタグをpushした場合は、同じファイルがGitHub Releaseにも自動添付されます。ビルドはPython 3.13 x64、Windows Server 2022 runnerで行うため、Windows 11 x64での利用を対象にしています。ASIカメラを使用する場合は上記タスクまたはスクリプトでネイティブドライバを導入してください（`zwoasi` は実行ファイルに同梱済みです）。初回確認は `config.yaml` の `dummy_camera: true` による動画入力を推奨します。
 
 ## ライセンス
 

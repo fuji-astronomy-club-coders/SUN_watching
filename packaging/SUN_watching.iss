@@ -1,6 +1,6 @@
 #define AppName "SUN_watching"
 #ifndef AppVersion
-  #define AppVersion "1.10.0"
+  #define AppVersion "1.10.1"
 #endif
 #define AppPublisher "fuji-astronomy-club-coders"
 #define AppExeName "SUN_watching.exe"
@@ -27,14 +27,16 @@ UninstallDisplayIcon={app}\{#AppExeName}
 Source: "..\dist\SUN_watching\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Dirs]
-; アプリ本体とは別に、書き込み可能な出力先をあらかじめ用意する。
+; ログは実行ファイルと同じフォルダへ、データとレポートは書き込み可能な
+; ユーザー領域へあらかじめ用意する。
+Name: "{app}\log"; Flags: uninsneveruninstall
 Name: "{localappdata}\SUN_watching"; Flags: uninsneveruninstall
-Name: "{localappdata}\SUN_watching\log"; Flags: uninsneveruninstall
 Name: "{localappdata}\SUN_watching\data"; Flags: uninsneveruninstall
 Name: "{localappdata}\SUN_watching\data\report"; Flags: uninsneveruninstall
 
 [Icons]
 Name: "{group}\SUN_watching"; Filename: "{app}\{#AppExeName}"
+Name: "{commonstartmenu}\SUN_watching\設定エディタ"; Filename: "{app}\{#AppExeName}"; Parameters: "--edit-config"
 Name: "{autodesktop}\SUN_watching"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Tasks]
