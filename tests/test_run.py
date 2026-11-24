@@ -73,5 +73,7 @@ def test_check_config_exits_before_gui(
 
     captured = capsys.readouterr()
     assert "OK: config and schema are valid" in captured.out
-    assert (tmp_path / "log").is_dir()
+    repo_root = Path(run.__file__).resolve().parent
+    assert (repo_root / "log").is_dir()
+    assert not (tmp_path / "log").exists()
     assert (tmp_path / "data").is_dir()

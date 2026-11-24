@@ -131,14 +131,15 @@ PyQt6 のウィンドウ。左にカメラ映像、右に操作・数値パネ�
 
 ### 6.2 出力
 
-出力先ルートはソース実行時はリポジトリ直下、Windows 配布物では `%LOCALAPPDATA%\SUN_watching`(環境変数 `SUN_WATCHING_HOME` で上書き可能)である。レポートの親ディレクトリは既定で `data/report/` で、`Run.output.report_dir` で変更できる。起動時に `log/`、`data/`、既定の `data/report/` が作成される。`YYYYMMDD` は起動日。
+ログはソース実行時はリポジトリ直下、Windows 配布物では `SUN_watching.exe` と同じフォルダの `log/` に保存する。データとレポートの出力先ルートはソース実行時はリポジトリ直下、Windows 配布物では `%LOCALAPPDATA%\SUN_watching`(環境変数 `SUN_WATCHING_HOME` で上書き可能)である。レポートの親ディレクトリは既定で `data/report/` で、`Run.output.report_dir` で変更できる。起動時に `<app_root>/log/`、`data/`、既定の `data/report/` が作成される。`YYYYMMDD` は起動日。
 
 | 出力 | パス | 内容 |
 | --- | --- | --- |
-| ログ | `log/sunfindwestV2_YYYYMMDD_HHMMSS.log`(出力先ルート基準) | DEBUG レベル以上。コンソールにも出力 |
+| ログ | `<app_root>/log/sunfindwestV2_YYYYMMDD_HHMMSS.log` | DEBUG レベル以上。コンソールにも出力 |
 | 解析 CSV | `<report_dir>/YYYYMMDD/sun_data_YYYYMMDD_HHMMSS_BYsunfindwestV2.csv` | 1フレーム1行(下表) |
 | キャプチャ画像 | `<report_dir>/YYYYMMDD/captures/raw_YYYYMMDD_HHMMSS_mmm_f<フレーム番号>.png` | Capture ボタンで保存したフレーム(オーバーレイ無しの生画像) |
 
+`<app_root>` はソース実行時はリポジトリルート、配布物では exe のあるフォルダ。`SUN_WATCHING_HOME` はログには影響しない。
 `<report_dir>` は既定で出力先ルート基準の `data/report`。`Run.output.report_dir` に相対パスを書くと出力先ルート基準、絶対パスを書くとその場所になる。
 
 CSV の列:

@@ -1,6 +1,6 @@
 #define AppName "SUN_watching"
 #ifndef AppVersion
-  #define AppVersion "1.10.1"
+  #define AppVersion "1.10.2"
 #endif
 #define AppPublisher "fuji-astronomy-club-coders"
 #define AppExeName "SUN_watching.exe"

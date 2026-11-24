@@ -1,8 +1,10 @@
 """ソース実行と PyInstaller 配布物で共通して使うパスを提供する。
 
 配布物では設定ファイルや DLL を実行ファイル直属の ``_internal`` 以下に
-配置する。一方、ログや解析結果はユーザーが書き込み可能な
-``%LOCALAPPDATA%\\SUN_watching`` (または ``SUN_WATCHING_HOME``) に保存する。
+配置する。ログはソース実行時はリポジトリ直下、配布物では実行ファイルと
+同じフォルダの ``log`` に保存する。一方、データと解析結果はユーザーが
+書き込み可能な ``%LOCALAPPDATA%\\SUN_watching`` (または
+``SUN_WATCHING_HOME``) に保存する。
 これにより PATH の変更や管理者権限なしで起動できる。
 """
 
@@ -39,6 +41,21 @@ def resource_dir() -> Path:
     return Path(__file__).resolve().parent
 
 
+def app_root() -> Path:
+    """リポジトリ(ソース実行)または実行ファイル(配布物)のルートを返す。
+
+    Returns
+    -------
+    Path
+        ソース実行時は ``sun_find_west_v2`` パッケージの親ディレクトリ、
+        配布物では ``SUN_watching.exe`` が置かれているディレクトリ。
+        ログの保存先はこのディレクトリ基準にする。
+    """
+    if is_frozen():
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent.parent
+
+
 def default_user_home() -> Path:
     """出力先の既定ルートを返す。
 
@@ -48,7 +65,7 @@ def default_user_home() -> Path:
         配布物では ``%LOCALAPPDATA%\\SUN_watching``、ソース実行時はリポジトリのルート。
     """
     if not is_frozen():
-        return Path(__file__).resolve().parent.parent
+        return app_root()
 
     local_app_data = os.environ.get("LOCALAPPDATA")
     if local_app_data:
@@ -114,8 +131,12 @@ def resolve_dll_path() -> Path | None:
 
 
 def log_dir() -> Path:
-    """ログの出力先ディレクトリを返す。"""
-    return user_home() / "log"
+    """ログの出力先ディレクトリを返す。
+
+    ソース実行時はリポジトリ直下、配布物では実行ファイルと同じフォルダの
+    ``log`` を返す。``SUN_WATCHING_HOME`` の影響は受けない。
+    """
+    return app_root() / "log"
 
 
 def data_dir() -> Path:

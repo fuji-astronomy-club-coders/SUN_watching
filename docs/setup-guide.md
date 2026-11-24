@@ -165,14 +165,14 @@ SUN_watching.exe --edit-config
 
 ## 6. 出力の場所
 
-ソースから実行した場合はリポジトリ直下、Windows 配布物では既定で `%LOCALAPPDATA%\SUN_watching` 以下に出力先を作ります。起動時に次のディレクトリが自動作成されるため、手作業での準備は不要です。
+ログはソース実行時はリポジトリ直下、Windows 配布物では `SUN_watching.exe` と同じフォルダの `log/` に保存します。データとレポートは、ソース実行時はリポジトリ直下、Windows 配布物では既定で `%LOCALAPPDATA%\SUN_watching` 以下に出力先を作ります。起動時に次のディレクトリが自動作成されるため、手作業での準備は不要です。
 
-- `log/` ... 実行ログ(`sunfindwestV2_YYYYMMDD_HHMMSS.log`)
-- `data/report/YYYYMMDD/` ... 起動日ごとのレポート(既定)
+- `log/` ... 実行ログ(`sunfindwestV2_YYYYMMDD_HHMMSS.log`)。リポジトリ直下または exe と同じフォルダ
+- `data/report/YYYYMMDD/` ... 起動日ごとのレポート(既定、データの出力先ルート基準)
   - `sun_data_..._BYsunfindwestV2.csv` ... 解析結果(1フレーム1行)
   - `captures/` ... Capture ボタンで保存した画像
 
-レポートの出力先だけを変えたい場合は、`config.yaml` の `Run.output.report_dir` を指定してください。空文字なら既定の `data/report`、相対パスなら出力先ルート基準、絶対パスならその場所へ出力します。ログを含む出力先ルート全体を変えたい場合は、起動前に環境変数 `SUN_WATCHING_HOME` を設定してください。配布物のインストーラーはユーザー単位に導入され、管理者権限や PATH 変更を必要としません。
+レポートの出力先だけを変えたい場合は、`config.yaml` の `Run.output.report_dir` を指定してください。空文字なら既定の `data/report`、相対パスなら出力先ルート基準、絶対パスならその場所へ出力します。データとレポートの出力先ルート全体を変えたい場合は、起動前に環境変数 `SUN_WATCHING_HOME` を設定してください(ログは exe 側の `log/` のまま変わりません)。配布物のインストーラーはユーザー単位に導入され、管理者権限や PATH 変更を必要としません。
 
 ## 7. 動作確認用コマンド(開発者向け)
 

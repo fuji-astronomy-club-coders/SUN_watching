@@ -78,6 +78,7 @@ sun_find_west_v2/
 tests/                  pytest
 materials/              調整マニュアルなどの資料
 report/                 観測ログ
+log/                    実行ログ(ソース実行時。配布物は exe と同じフォルダ)
 ```
 
 ## 開発
@@ -95,13 +96,13 @@ CI(`.github/workflows/ci.yml`)では依存関係チェック、Ruff、basedpyrig
 
 Windows 11 x64向けの配布物は、GitHub Actionsの `Build Windows distribution` を手動実行すると作成できます。Actionsの実行結果から、次のファイルをダウンロードできます。
 
-ファイル名には `pyproject.toml` のバージョンが入ります（例: `1.10.1`）。
+ファイル名には `pyproject.toml` のバージョンが入ります（例: `1.10.2`）。
 
 - `SUN_watching-<バージョン>-windows-x64.zip` ... 展開して `SUN_watching.exe` を実行するポータブル版
 - `SUN_watching-<バージョン>-setup-windows-x64.exe` ... Inno Setupによるインストーラー
 - `SUN_watching-<バージョン>-SHA256SUMS.txt` ... 上記2ファイルのSHA-256ハッシュ
 
-インストーラーはユーザー単位（既定: `%LOCALAPPDATA%\Programs\SUN_watching`）に導入され、管理者権限や PATH の変更を必要としません。設定ファイル・スキーマ・DLL は実行ファイルから相対的に参照されます。ログと解析結果は既定で `%LOCALAPPDATA%\SUN_watching\log` と `%LOCALAPPDATA%\SUN_watching\data` に保存され、起動時に自動作成されます。別の場所を使いたい場合は環境変数 `SUN_WATCHING_HOME` を設定してください。ASI SDK の `ASICamera2.dll` はビルド時にソースとの SHA-256 一致と 64bit (AMD64) であることを検証したうえで `_internal\camera\bin` に同梱され、インストール後の配置も検証されます。万一同梱 DLL が無い場合は、ZWO ドライバが導入したシステム側の `ASICamera2.dll`（`%SystemRoot%\System32`）を使用します。
+インストーラーはユーザー単位（既定: `%LOCALAPPDATA%\Programs\SUN_watching`）に導入され、管理者権限や PATH の変更を必要としません。設定ファイル・スキーマ・DLL は実行ファイルから相対的に参照されます。ログは実行ファイルと同じフォルダの `log`、解析結果は既定で `%LOCALAPPDATA%\SUN_watching\data` に保存され、起動時に自動作成されます。解析結果の場所を別にしたい場合は環境変数 `SUN_WATCHING_HOME` を設定してください（ログは exe 側の `log` のままです）。ASI SDK の `ASICamera2.dll` はビルド時にソースとの SHA-256 一致と 64bit (AMD64) であることを検証したうえで `_internal\camera\bin` に同梱され、インストール後の配置も検証されます。万一同梱 DLL が無い場合は、ZWO ドライバが導入したシステム側の `ASICamera2.dll`（`%SystemRoot%\System32`）を使用します。
 
 配布物の動作確認には `SUN_watching.exe --check-config` を使えます。これは設定ファイルと `config_schema.json` の検証だけを行い、画面を開かずに終了します。
 
@@ -111,7 +112,7 @@ Windows 11 x64向けの配布物は、GitHub Actionsの `Build Windows distribut
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\install-asi-driver.ps1
 ```
 
-リポジトリに `v1.10.1` のようなタグをpushした場合は、同じファイルがGitHub Releaseにも自動添付されます。ビルドはPython 3.13 x64、Windows Server 2022 runnerで行うため、Windows 11 x64での利用を対象にしています。ASIカメラを使用する場合は上記タスクまたはスクリプトでネイティブドライバを導入してください（`zwoasi` は実行ファイルに同梱済みです）。初回確認は `config.yaml` の `dummy_camera: true` による動画入力を推奨します。
+リポジトリに `v1.10.2` のようなタグをpushした場合は、同じファイルがGitHub Releaseにも自動添付されます。ビルドはPython 3.13 x64、Windows Server 2022 runnerで行うため、Windows 11 x64での利用を対象にしています。ASIカメラを使用する場合は上記タスクまたはスクリプトでネイティブドライバを導入してください（`zwoasi` は実行ファイルに同梱済みです）。初回確認は `config.yaml` の `dummy_camera: true` による動画入力を推奨します。
 
 ## ライセンス
 

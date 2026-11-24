@@ -144,10 +144,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "Frozen executable failed --check-imports (exit=$LASTEXITCODE)"
           }
-          foreach ($dir in @("log", "data", "data\report")) {
+          foreach ($dir in @("data", "data\report")) {
             if (-not (Test-Path -LiteralPath (Join-Path $smokeHome $dir))) {
               throw "Missing runtime directory: $dir"
             }
+          }
+          # ログは exe と同じフォルダ (dist\SUN_watching\log) に作られる。
+          $exeLog = Join-Path (Get-Location) "dist\SUN_watching\log"
+          if (-not (Test-Path -LiteralPath $exeLog)) {
+            throw "Missing runtime directory: $exeLog"
           }
 
       - name: Create ZIP package
@@ -199,10 +204,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "Installed executable failed --check-imports (exit=$LASTEXITCODE)"
           }
-          foreach ($dir in @("log", "data", "data\report")) {
+          foreach ($dir in @("data", "data\report")) {
             if (-not (Test-Path -LiteralPath (Join-Path $smokeHome $dir))) {
               throw "Missing runtime directory after install: $dir"
             }
+          }
+          $installedLog = Join-Path $installDir "log"
+          if (-not (Test-Path -LiteralPath $installedLog)) {
+            throw "Missing runtime directory after install: $installedLog"
           }
           if (-not (Test-Path -LiteralPath (Join-Path $installDir "tools\install-asi-driver.ps1"))) {
             throw "Missing installed driver helper: tools\install-asi-driver.ps1"

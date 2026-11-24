@@ -17,12 +17,16 @@ def test_source_layout() -> None:
     assert paths.config_path().name == "config.yaml"
     assert paths.schema_path().is_file()
     assert paths.dll_path().is_file()
+    assert paths.log_dir() == Path(paths.__file__).resolve().parent.parent / "log"
 
 
 def test_frozen_layout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """配布物では _MEIPASS 直下の config / camera を参照する。"""
+    exe_dir = tmp_path / "installed"
+    exe_dir.mkdir()
     monkeypatch.setattr(sys, "frozen", True, raising=False)
     monkeypatch.setattr(sys, "_MEIPASS", str(tmp_path), raising=False)
+    monkeypatch.setattr(sys, "executable", str(exe_dir / "SUN_watching.exe"))
     monkeypatch.delenv(paths.HOME_ENV_VAR, raising=False)
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path / "localappdata"))
 
@@ -31,6 +35,9 @@ def test_frozen_layout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert paths.schema_path() == tmp_path / "config" / "config_schema.json"
     assert paths.dll_path() == tmp_path / "camera" / "bin" / "ASICamera2.dll"
     assert paths.user_home() == tmp_path / "localappdata" / paths.APP_NAME
+    # ログだけは出力先ルートではなく、exe と同じフォルダに置く。
+    assert paths.app_root() == exe_dir
+    assert paths.log_dir() == exe_dir / "log"
 
 
 def _imported_path_names(path: Path) -> set[str]:
@@ -108,15 +115,21 @@ def test_resolve_dll_returns_none_when_missing(
 def test_home_override_and_directories(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """SUN_WATCHING_HOME を上書きして出力先を作成できる。"""
+    """SUN_WATCHING_HOME はデータ用で、ログは app ルート側に固定される。"""
     home = tmp_path / "custom"
+    exe_dir = tmp_path / "installed"
+    exe_dir.mkdir()
     monkeypatch.setenv(paths.HOME_ENV_VAR, str(home))
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "executable", str(exe_dir / "SUN_watching.exe"))
 
     paths.ensure_runtime_directories()
 
     assert paths.user_home() == home
-    for directory in ("log", "data", "data/report"):
+    for directory in ("data", "data/report"):
         assert (home / directory).is_dir()
+    assert (exe_dir / "log").is_dir()
+    assert not (home / "log").exists()
 
 
 def test_resolve_report_dir_default(
