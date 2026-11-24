@@ -14,13 +14,20 @@ print("Booting up the system…")
 print("Setting up logger…")
 
 try:
-    from .paths import DLL_PATH, ensure_runtime_directories, log_dir, report_dir
+    from .paths import (
+        DLL_PATH,
+        ensure_runtime_directories,
+        log_dir,
+        report_dir,
+        resolve_dll_path,
+    )
 except ImportError:  # PyInstaller 配布物では main がトップレベルモジュールになる
     from paths import (  # pyright: ignore[reportMissingImports]
         DLL_PATH,
         ensure_runtime_directories,
         log_dir,
         report_dir,
+        resolve_dll_path,
     )
 
 ensure_runtime_directories()
@@ -619,11 +626,19 @@ def main(config: dict) -> None:
     logger.info("Attempting to connect to the camera...")
     camera = None
     try:
-        env_filename = DLL_PATH
-        os.environ["ZWO_ASI_LIB"] = str(env_filename)
-        logger.debug(
-            f"Successfully set ZWO_ASI_LIB environment variable:{env_filename}"
-        )
+        env_filename = resolve_dll_path()
+        if env_filename is None:
+            env_filename = DLL_PATH
+            logger.warning(
+                "ASICamera2.dll が見つかりません (%s)。ZWO ASI ドライバを導入するか、"
+                "配布物を再インストールしてください。",
+                DLL_PATH,
+            )
+        else:
+            os.environ["ZWO_ASI_LIB"] = str(env_filename)
+            logger.debug(
+                f"Successfully set ZWO_ASI_LIB environment variable:{env_filename}"
+            )
 
         logger.info(f"dummy_camera={dummy_camera}")
         camera = connect_camera(env_filename, use_dummy=dummy_camera)

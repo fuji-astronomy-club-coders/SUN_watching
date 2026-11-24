@@ -1,6 +1,6 @@
 #define AppName "SUN_watching"
 #ifndef AppVersion
-  #define AppVersion "1.9.3"
+  #define AppVersion "1.9.4"
 #endif
 #define AppPublisher "fuji-astronomy-club-coders"
 #define AppExeName "SUN_watching.exe"
@@ -40,7 +40,7 @@ Name: "{autodesktop}\SUN_watching"; Filename: "{app}\{#AppExeName}"; Tasks: desk
 [Tasks]
 Name: "desktopicon"; Description: "デスクトップにショートカットを作成"; GroupDescription: "追加タスク:"
 ; 既定でチェックする。ドライバ本体は同梱せず、インストール時に公式サイトから取得する。
-; サイレント導入で不要な場合は /TASKS="" を指定してスキップできる。
+; サイレント導入で不要な場合は /MERGETASKS=!asidriver を指定してスキップできる。
 Name: "asidriver"; Description: "ZWO ASI カメラドライバを公式サイトからダウンロードしてインストール (管理者権限とネットワークが必要)"; GroupDescription: "追加タスク:"
 
 [Run]
@@ -49,6 +49,15 @@ Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; Description: "SUN_watching
 [Code]
 const
   AsiDriverTask = 'asidriver';
+
+procedure VerifyBundledResources();
+var
+  DllPath: String;
+begin
+  DllPath := ExpandConstant('{app}\_internal\camera\bin\ASICamera2.dll');
+  if not FileExists(DllPath) then
+    MsgBox('同梱の ASICamera2.dll が見つかりません: ' + DllPath + #13#10 + '配布物が破損している可能性があります。インストーラーを再ダウンロードしてください。', mbError, MB_OK);
+end;
 
 procedure InstallAsiDriver();
 var
@@ -76,6 +85,10 @@ end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
-  if (CurStep = ssPostInstall) and WizardIsTaskSelected(AsiDriverTask) then
-    InstallAsiDriver();
+  if CurStep = ssPostInstall then
+  begin
+    VerifyBundledResources();
+    if WizardIsTaskSelected(AsiDriverTask) then
+      InstallAsiDriver();
+  end;
 end;

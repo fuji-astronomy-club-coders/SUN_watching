@@ -66,6 +66,45 @@ def test_paths_exports_every_imported_name() -> None:
     assert not missing, f"paths.py に無い名前を import しています: {sorted(missing)}"
 
 
+def test_bundled_asi_dll_is_amd64() -> None:
+    """同梱する ASICamera2.dll が 64bit (AMD64) である。"""
+    dll = Path(paths.__file__).resolve().parent / "camera" / "bin" / paths.DLL_NAME
+    data = dll.read_bytes()
+    pe_offset = int.from_bytes(data[0x3C:0x40], "little")
+    assert data[pe_offset : pe_offset + 4] == b"PE\0\0"
+    assert int.from_bytes(data[pe_offset + 4 : pe_offset + 6], "little") == 0x8664
+
+
+def test_resolve_dll_prefers_bundled_file() -> None:
+    """ソース／配布物では同梱 DLL を優先する。"""
+    assert paths.resolve_dll_path() == paths.dll_path()
+
+
+def test_resolve_dll_falls_back_to_system_driver(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """同梱 DLL が無ければシステム導入されたドライバの DLL を使う。"""
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "_MEIPASS", str(tmp_path / "meipass"), raising=False)
+    system_dll = tmp_path / "windows" / "System32" / paths.DLL_NAME
+    system_dll.parent.mkdir(parents=True)
+    system_dll.write_bytes(b"dummy")
+    monkeypatch.setenv("SystemRoot", str(tmp_path / "windows"))
+
+    assert paths.resolve_dll_path() == system_dll
+
+
+def test_resolve_dll_returns_none_when_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """同梱もシステムも無い場合は None を返す。"""
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    monkeypatch.setattr(sys, "_MEIPASS", str(tmp_path / "meipass"), raising=False)
+    monkeypatch.setenv("SystemRoot", str(tmp_path / "windows"))
+
+    assert paths.resolve_dll_path() is None
+
+
 def test_home_override_and_directories(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

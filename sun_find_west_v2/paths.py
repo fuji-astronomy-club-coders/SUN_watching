@@ -14,6 +14,7 @@ from pathlib import Path
 
 APP_NAME = "SUN_watching"
 HOME_ENV_VAR = "SUN_WATCHING_HOME"
+DLL_NAME = "ASICamera2.dll"
 
 
 def is_frozen() -> bool:
@@ -81,7 +82,35 @@ def schema_path() -> Path:
 
 def dll_path() -> Path:
     """同梱の ASICamera2.dll のパスを返す。"""
-    return resource_dir() / "camera" / "bin" / "ASICamera2.dll"
+    return resource_dir() / "camera" / "bin" / DLL_NAME
+
+
+def system_dll_path() -> Path | None:
+    """ZWO ドライバがシステムへ導入した ASICamera2.dll のパスを返す。
+
+    同梱 DLL が無い場合のフォールバック用。見つからなければ None。
+    """
+    if sys.platform != "win32":
+        return None
+    system_root = os.environ.get("SystemRoot")
+    if not system_root:
+        return None
+    candidate = Path(system_root) / "System32" / DLL_NAME
+    if candidate.is_file():
+        return candidate
+    return None
+
+
+def resolve_dll_path() -> Path | None:
+    """実際に使用する ASICamera2.dll を返す。
+
+    同梱の DLL を優先し、無ければシステムにインストールされたドライバの
+    DLL を使う。どちらも無ければ None。
+    """
+    bundled = dll_path()
+    if bundled.is_file():
+        return bundled
+    return system_dll_path()
 
 
 def log_dir() -> Path:

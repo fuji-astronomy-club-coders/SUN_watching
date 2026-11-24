@@ -29,6 +29,17 @@ foreach ($path in $required) {
   if (-not (Test-Path -LiteralPath $path)) { throw "Missing packaged file: $path" }
 }
 
+# 同梱 DLL がソースと同一で 64bit であることを確認する。
+$sourceDll = "sun_find_west_v2\camera\bin\ASICamera2.dll"
+$packagedDll = "dist\SUN_watching\_internal\camera\bin\ASICamera2.dll"
+if ((Get-FileHash -LiteralPath $packagedDll -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $sourceDll -Algorithm SHA256).Hash) {
+  throw "Packaged ASICamera2.dll does not match the source DLL."
+}
+$peBytes = [System.IO.File]::ReadAllBytes($packagedDll)
+$peOffset = [System.BitConverter]::ToInt32($peBytes, 0x3C)
+$machine = [System.BitConverter]::ToUInt16($peBytes, $peOffset + 4)
+if ($machine -ne 0x8664) { throw ("Packaged ASICamera2.dll is not x64 (machine=0x{0:X4})." -f $machine) }
+
 # 同梱物が揃っていても起動時 import が壊れていないか確認する。
 $env:SUN_WATCHING_HOME = Join-Path $env:TEMP "SUN_watching_smoke_home"
 & "$root\dist\SUN_watching\SUN_watching.exe" --check-config

@@ -102,8 +102,9 @@ python -c "import struct; print(struct.calcsize('P') * 8)"
 
 ### 4.3 SDK DLL の確認
 
-1. `sun_find_west_v2/camera/bin/ASICamera2.dll` が存在することを確認する。このDLLはリポジトリに同梱されています。
-2. 通常は追加ダウンロードやコピーは不要です。DLLを差し替える場合は、Windows 64bit用の `ASICamera2.dll` を同じ場所に配置してください。
+1. `sun_find_west_v2/camera/bin/ASICamera2.dll` が存在することを確認する。このDLLはリポジトリに同梱されています。Windows 配布物では `_internal\camera\bin\ASICamera2.dll` として同梱され、インストーラーが配置を確認します。
+2. 通常は追加ダウンロードやコピーは不要です。DLLを差し替える場合は、Windows 64bit用の `ASICamera2.dll` を同じ場所に配置してください。ビルド時には 64bit (AMD64) であることと、ソースとの SHA-256 一致が検証されます。
+3. 同梱 DLL が見つからない場合、アプリは ZWO ドライバが導入した `%SystemRoot%\System32\ASICamera2.dll` を自動的に使用します。
 
 > **補足:** ZWO公式サイトの Product SDK は開発者向けです。本プロジェクトではDLLをリポジトリに同梱しているため、通常の利用者が別途 SDK をダウンロードする必要はありません。
 
