@@ -148,10 +148,25 @@
             "dummy_camera"
           ],
           "additionalProperties": false
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "report_dir": {
+              "type": "string",
+              "description": "レポート(解析CSVとキャプチャ画像)の出力先。空なら data/report。相対パスは出力先ルート基準"
+            }
+          },
+          "required": [
+            "report_dir"
+          ],
+          "additionalProperties": false,
+          "description": "出力先オプション"
         }
       },
       "required": [
-        "camera_source"
+        "camera_source",
+        "output"
       ],
       "additionalProperties": false,
       "description": "実行オプション"

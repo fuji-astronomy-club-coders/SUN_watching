@@ -18,16 +18,16 @@ try:
         DLL_PATH,
         ensure_runtime_directories,
         log_dir,
-        report_dir,
         resolve_dll_path,
+        resolve_report_dir,
     )
 except ImportError:  # PyInstaller 配布物では main がトップレベルモジュールになる
     from paths import (  # pyright: ignore[reportMissingImports]
         DLL_PATH,
         ensure_runtime_directories,
         log_dir,
-        report_dir,
         resolve_dll_path,
+        resolve_report_dir,
     )
 
 ensure_runtime_directories()
@@ -35,8 +35,6 @@ ensure_runtime_directories()
 print("setting logger...")
 dt = datetime.datetime.now().strftime("%Y%m%d")
 ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-reports_path = report_dir() / f"{dt}"
-reports_path.mkdir(parents=True, exist_ok=True)
 
 logfile = log_dir() / f"sunfindwestV2_{ts}.log"
 
@@ -613,6 +611,7 @@ def main(config: dict) -> None:
     try:
         camera_param = config["Camera"]
         dummy_camera = config["Run"]["camera_source"]["dummy_camera"]
+        report_dir_value = config["Run"]["output"]["report_dir"]
         main_param = config["sun_find_west_v2"]
         visualizer_constract_param = dict(main_param["Visualizer"])
         visualizer_constract_param["acceptable"] = main_param["Analyzer"]["acceptable"]
@@ -674,6 +673,10 @@ def main(config: dict) -> None:
     except asi.ZWO_Error as e:
         logger.critical(f"Failed to start video capture or retrieve ROI: {e}")
         cancel_process(camera=camera)
+
+    reports_path = resolve_report_dir(report_dir_value) / f"{dt}"
+    reports_path.mkdir(parents=True, exist_ok=True)
+    logger.info(f"reports_path: {reports_path}")
 
     cap_dir = reports_path / "captures"
     cap_dir.mkdir(parents=True, exist_ok=True)

@@ -52,6 +52,8 @@ hiddenimports = [
     "camera.controller",
     "camera.vid_dummy",
     "config.loader",
+    "config.editor",
+    "config.editor_model",
     "paths",
     "core.MIN2ver2",
     "core.RANSAC",

@@ -92,7 +92,7 @@ def system_dll_path() -> Path | None:
     """
     if sys.platform != "win32":
         return None
-    system_root = os.environ.get("SystemRoot")
+    system_root = os.environ.get("SYSTEMROOT")
     if not system_root:
         return None
     candidate = Path(system_root) / "System32" / DLL_NAME
@@ -126,6 +126,31 @@ def data_dir() -> Path:
 def report_dir() -> Path:
     """日付別レポートの親ディレクトリを返す。"""
     return data_dir() / "report"
+
+
+def resolve_report_dir(value: str | Path | None = None) -> Path:
+    """設定値から日付別レポートの親ディレクトリを決める。
+
+    Parameters
+    ----------
+    value : str | Path | None
+        ``Run.output.report_dir`` の値。空文字や None なら既定の
+        :func:`report_dir` を返す。相対パスは :func:`user_home` からの
+        相対パスとして扱い、絶対パスはそのまま使う。
+
+    Returns
+    -------
+    Path
+        レポートの親ディレクトリ。
+    """
+    text = str(value).strip() if value is not None else ""
+    if not text:
+        return report_dir()
+
+    path = Path(text).expanduser()
+    if not path.is_absolute():
+        path = user_home() / path
+    return path
 
 
 def ensure_runtime_directories() -> None:

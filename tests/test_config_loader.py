@@ -45,6 +45,7 @@ def test_valid_override(tmp_path: Path, base: dict) -> None:
         ("sun_find_west_v2", "Visualizer", "grid_alpha", 1.5),  # maximum 超過
         ("sun_find_west_v2", "Visualizer", "grid_color", "red"),  # pattern 違反
         ("Run", "camera_source", "dummy_camera", "yes please"),  # 型違反
+        ("Run", "output", "report_dir", 123),  # パスは文字列
     ],
 )
 def test_invalid_value_is_rejected(

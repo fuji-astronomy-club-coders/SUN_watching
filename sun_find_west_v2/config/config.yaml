@@ -38,6 +38,13 @@ Run:
   camera_source:
     # ダミーカメラ(動画ファイル再生)を使う。true=ダミー, false=実機ASIカメラ(zwoasi必須)
     dummy_camera: true
+  output:
+    # レポート(解析CSVとキャプチャ画像)の出力先フォルダ。
+    # 空文字なら既定の data/report を使う。
+    # 相対パスは出力先ルート(ソース実行時はリポジトリ直下、
+    # 配布物では %LOCALAPPDATA%\SUN_watching)からの相対パスになる。
+    # 絶対パスを指定すれば任意のドライブ・フォルダへ出力できる。
+    report_dir: ""
 
 sun_find_west_v2:
   Analyzer:

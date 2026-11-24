@@ -23,6 +23,8 @@ run.py ── 設定の読み込み・検証 ──▶ main.main(config)
 | `run.py` | 引数解析、`config.yaml` の読み込みとスキーマ検証、`main()` の起動。設定の読み込みはここだけが行う |
 | `sun_find_west_v2/main.py` | `SunTrackerApp`。撮影・解析・描画・CSV記録・手動キャプチャのメインループ |
 | `sun_find_west_v2/config/loader.py` | YAML 読み込みと JSON Schema(Draft 7)検証。違反は `ConfigError` |
+| `sun_find_west_v2/config/editor.py` | tkinter 製の設定エディタ GUI。`--edit-config` で起動 |
+| `sun_find_west_v2/config/editor_model.py` | 設定エディタ用のスキーマ解析、YAML 入出力、検証 |
 | `sun_find_west_v2/camera/controller.py` | カメラ接続(`connect_camera`)、パラメータ一括設定(`apply_camera_config`)、実行中の値変更(`handle_config`) |
 | `sun_find_west_v2/camera/vid_dummy.py` | `VideoDummyCamera`。動画ファイルを `zwoasi.Camera` 互換のカメラとして扱う |
 | `sun_find_west_v2/core/MIN2ver2.py` | 最小二乗法による太陽の円近似。黒点を除外して中心・半径を返す |
@@ -33,7 +35,7 @@ run.py ── 設定の読み込み・検証 ──▶ main.main(config)
 
 起動から終了までの流れ。
 
-1. `python run.py [--config PATH]` で起動する。設定は `config.yaml`(または `--config` の指定先)を `config_schema.json` で検証する。違反があれば起動せずエラーで終了する(補完・既定値の代入は行わない)。
+1. `python run.py [--config PATH]` で起動する。設定は `config.yaml`(または `--config` の指定先)を `config_schema.json` で検証する。違反があれば起動せずエラーで終了する(補完・既定値の代入は行わない)。`--edit-config` を付けた場合は解析を開始せず、設定エディタ GUI を起動する。
 2. ログ出力先と保存先を作成する(§6)。
 3. `Run.camera_source.dummy_camera` に従ってカメラを接続する。
    - `true`: ダミーカメラ。動画ファイルをファイルダイアログで選ぶ。選ばなければ起動を中止する。
@@ -129,13 +131,15 @@ PyQt6 のウィンドウ。左にカメラ映像、右に操作・数値パネ�
 
 ### 6.2 出力
 
-出力先ルートはソース実行時はリポジトリ直下、Windows 配布物では `%LOCALAPPDATA%\SUN_watching`(環境変数 `SUN_WATCHING_HOME` で上書き可能)である。起動時に `log/`、`data/`、`data/report/` が作成される。`YYYYMMDD` は起動日。
+出力先ルートはソース実行時はリポジトリ直下、Windows 配布物では `%LOCALAPPDATA%\SUN_watching`(環境変数 `SUN_WATCHING_HOME` で上書き可能)である。レポートの親ディレクトリは既定で `data/report/` で、`Run.output.report_dir` で変更できる。起動時に `log/`、`data/`、既定の `data/report/` が作成される。`YYYYMMDD` は起動日。
 
-| 出力 | パス(出力先ルートからの相対) | 内容 |
+| 出力 | パス | 内容 |
 | --- | --- | --- |
-| ログ | `log/sunfindwestV2_YYYYMMDD_HHMMSS.log` | DEBUG レベル以上。コンソールにも出力 |
-| 解析 CSV | `data/report/YYYYMMDD/sun_data_YYYYMMDD_HHMMSS_BYsunfindwestV2.csv` | 1フレーム1行(下表) |
-| キャプチャ画像 | `data/report/YYYYMMDD/captures/raw_YYYYMMDD_HHMMSS_mmm_f<フレーム番号>.png` | Capture ボタンで保存したフレーム(オーバーレイ無しの生画像) |
+| ログ | `log/sunfindwestV2_YYYYMMDD_HHMMSS.log`(出力先ルート基準) | DEBUG レベル以上。コンソールにも出力 |
+| 解析 CSV | `<report_dir>/YYYYMMDD/sun_data_YYYYMMDD_HHMMSS_BYsunfindwestV2.csv` | 1フレーム1行(下表) |
+| キャプチャ画像 | `<report_dir>/YYYYMMDD/captures/raw_YYYYMMDD_HHMMSS_mmm_f<フレーム番号>.png` | Capture ボタンで保存したフレーム(オーバーレイ無しの生画像) |
+
+`<report_dir>` は既定で出力先ルート基準の `data/report`。`Run.output.report_dir` に相対パスを書くと出力先ルート基準、絶対パスを書くとその場所になる。
 
 CSV の列:
 
@@ -176,6 +180,7 @@ CSV の列:
 | 項目 | 型 | 内容 |
 | --- | --- | --- |
 | `camera_source.dummy_camera` | 真偽 | `true`=ダミー動画、`false`=実機 ASI カメラ |
+| `output.report_dir` | 文字列 | レポートの出力先。空なら `data/report`。相対パスは出力先ルート基準、絶対パスはそのまま |
 
 ### sun_find_west_v2
 
@@ -194,7 +199,15 @@ CSV の列:
 
 `light_threshod`・`limb_wigth` は、スキーマ上のキー名がこの綴りのため、そのまま記述する。
 
-## 8. 動作環境
+### 7.1 設定エディタ
+
+`python run.py --edit-config [--config PATH]` または環境変数 `SUN_WATCHING_EDIT_CONFIG=1` で起動する。tkinter 製で、PyQt6 は不要。
+
+- `config_schema.json` の `properties` を走査し、`Camera` / `Run` / `sun_find_west_v2` をタブ、その下の object をグループとして入力欄を自動生成する。integer は範囲付き数値入力、number は小数入力、boolean はチェックボックス、enum は選択肢、`pattern` が色形式なら色選択ボタンになる。
+- 「検証」は現在の入力から設定 dict を組み立て、Draft 7 で検証して違反を一覧表示する。
+- 「保存」は検証に成功した場合だけ、一時ファイルへ書いてから `replace` する。コメントはスキーマの `description` から再生成する。
+- 入力ファイルが不正な YAML、または存在しない場合は、空の設定として編集を続けられる。保存時には必ず検証する。
+- スキーマに無いキーは読み込み時に警告し、保存時に取り除かれる。
 
 | 項目 | 内容 |
 | --- | --- |
@@ -217,4 +230,3 @@ CSV の列:
 既知の制約:
 
 - `main.py` は単体では起動できない。必ず `run.py` から起動する。
-- 出力先はリポジトリ直下の `report/` に固定で、設定では変更できない。

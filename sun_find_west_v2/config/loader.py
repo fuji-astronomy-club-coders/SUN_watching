@@ -13,7 +13,7 @@ import yaml
 from jsonschema import Draft7Validator
 
 try:
-    from .paths import DEFAULT_CONFIG_PATH, SCHEMA_PATH
+    from ..paths import DEFAULT_CONFIG_PATH, SCHEMA_PATH
 except ImportError:  # PyInstaller 配布物では config がトップレベルモジュールになる
     from paths import DEFAULT_CONFIG_PATH, SCHEMA_PATH  # pyright: ignore[reportMissingImports]
 

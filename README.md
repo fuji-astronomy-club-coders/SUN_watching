@@ -34,14 +34,32 @@ python -m pip install -e ".[dev]"
 ```bash
 python run.py                              # 既定の設定で起動
 python run.py --config path/to/config.yaml # 別の設定ファイルを使う
+python run.py --edit-config                # 設定エディタ (GUI) を起動
 ```
 
 設定は `sun_find_west_v2/config/config.yaml` に書きます。`run.py` が起動時に `config_schema.json` で検証し、項目の欠落・未知の項目・範囲外の値があるとエラーで停止します。
+
+### 設定エディタ (GUI)
+
+`--edit-config` を付けると、YAML を直接編集せずに設定を変更できます。
+
+```bash
+python run.py --edit-config                                 # 既定の設定を編集
+python run.py --edit-config --config path/to/config.yaml    # 別の設定を編集
+SUN_watching.exe --edit-config                              # 配布物の場合
+```
+
+- `config_schema.json` から入力欄を自動生成するため、`Camera` / `Run` / `sun_find_west_v2` の全項目をタブで編集できます。
+- 数値は範囲付きの入力欄、真偽値はチェックボックス、`img_type` は選択肢、`grid_color` は色選択ダイアログになります。
+- 「検証」でスキーマ違反を確認でき、「保存」は検証に通った場合だけ書き込みます。保存は一時ファイル経由なので、失敗しても元の設定は壊れません。
+- コメントは `config_schema.json` の説明から再生成されます。YAML を直接編集したい場合は従来どおりエディタで開けます。
+- 環境変数 `SUN_WATCHING_EDIT_CONFIG=1` でも起動できます。
 
 | 項目 | 内容 |
 | --- | --- |
 | `Camera` | 露出・ゲイン・転送設定など ASI カメラのパラメータ |
 | `Run.camera_source.dummy_camera` | `true` でダミーカメラ(動画再生)、`false` で実機 ASI カメラ |
+| `Run.output.report_dir` | レポート(CSV・キャプチャ画像)の出力先。空なら `data/report`、相対パスは出力先ルート基準、絶対パスはそのまま |
 | `sun_find_west_v2.Analyzer` | 許容角度 `acceptable`、軌道推定に使うフレーム数 `buf_lookback` |
 | `sun_find_west_v2.MIN2ver2` | 太陽検出のパラメータ(格子分割数・しきい値・縁の幅・黒点除外の回数) |
 | `sun_find_west_v2.Visualizer` | 画面のグリッド色・分割数・透明度など |
@@ -55,7 +73,7 @@ sun_find_west_v2/
   main.py               メインループ(撮影 → 解析 → 描画 → CSV 記録)
   qt_visualizer.py      PyQt6 ダッシュボード
   camera/               ASI カメラ制御とダミーカメラ
-  config/               config.yaml、スキーマ、ローダー
+  config/               config.yaml、スキーマ、ローダー、設定エディタ
   core/                 MIN2ver2(太陽検出)、RANSAC(角度推定)
 tests/                  pytest
 materials/              調整マニュアルなどの資料
@@ -77,7 +95,7 @@ CI(`.github/workflows/ci.yml`)では依存関係チェック、Ruff、basedpyrig
 
 Windows 11 x64向けの配布物は、GitHub Actionsの `Build Windows distribution` を手動実行すると作成できます。Actionsの実行結果から、次のファイルをダウンロードできます。
 
-ファイル名には `pyproject.toml` のバージョンが入ります（例: `1.9.4`）。
+ファイル名には `pyproject.toml` のバージョンが入ります（例: `1.10.0`）。
 
 - `SUN_watching-<バージョン>-windows-x64.zip` ... 展開して `SUN_watching.exe` を実行するポータブル版
 - `SUN_watching-<バージョン>-setup-windows-x64.exe` ... Inno Setupによるインストーラー
@@ -93,7 +111,7 @@ Windows 11 x64向けの配布物は、GitHub Actionsの `Build Windows distribut
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\install-asi-driver.ps1
 ```
 
-リポジトリに `v1.9.4` のようなタグをpushした場合は、同じファイルがGitHub Releaseにも自動添付されます。ビルドはPython 3.13 x64、Windows Server 2022 runnerで行うため、Windows 11 x64での利用を対象にしています。ASIカメラを使用する場合は上記タスクまたはスクリプトでネイティブドライバを導入してください（`zwoasi` は実行ファイルに同梱済みです）。初回確認は `config.yaml` の `dummy_camera: true` による動画入力を推奨します。
+リポジトリに `v1.10.0` のようなタグをpushした場合は、同じファイルがGitHub Releaseにも自動添付されます。ビルドはPython 3.13 x64、Windows Server 2022 runnerで行うため、Windows 11 x64での利用を対象にしています。ASIカメラを使用する場合は上記タスクまたはスクリプトでネイティブドライバを導入してください（`zwoasi` は実行ファイルに同梱済みです）。初回確認は `config.yaml` の `dummy_camera: true` による動画入力を推奨します。
 
 ## ライセンス
 

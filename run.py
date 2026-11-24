@@ -9,10 +9,13 @@
 
     python run.py
     python run.py --config path/to/config.yaml
+    python run.py --edit-config
+    python run.py --edit-config --config path/to/config.yaml
     SUN_watching.exe --check-config
 """
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -42,6 +45,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="YAML設定ファイル (省略時は sun_find_west_v2/config/config.yaml)",
     )
     parser.add_argument(
+        "--edit-config",
+        "--config-editor",
+        dest="edit_config",
+        action="store_true",
+        help="設定エディタ (GUI) を起動する。--config と併用可",
+    )
+    parser.add_argument(
         "--check-config",
         action="store_true",
         help="設定とスキーマだけを検証して終了する (配布物の動作確認用)",
@@ -54,6 +64,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def edit_config_requested(args: argparse.Namespace) -> bool:
+    """設定エディタを起動するかどうかを返す。
+
+    ``--edit-config`` に加えて、環境変数
+    ``SUN_WATCHING_EDIT_CONFIG=1`` でも起動できる。
+    """
+    env_value = os.environ.get("SUN_WATCHING_EDIT_CONFIG", "").strip().lower()
+    return bool(args.edit_config) or env_value in {"1", "true", "yes", "on"}
+
+
 def main() -> None:
     """設定を読み込んで検証し、main() に渡して起動する。"""
     args = parse_args()
@@ -64,6 +84,7 @@ def main() -> None:
     # main.py 側と同じ import 名(config.*)で読み込む
     from config.loader import (  # pyright: ignore[reportMissingImports]
         DEFAULT_CONFIG_PATH,
+        SCHEMA_PATH,
         ConfigError,
         load_config,
     )
@@ -72,6 +93,13 @@ def main() -> None:
     ensure_runtime_directories()
 
     config_path = args.config or DEFAULT_CONFIG_PATH
+
+    if edit_config_requested(args):
+        from config.editor import run_editor  # pyright: ignore[reportMissingImports]
+
+        run_editor(config_path, SCHEMA_PATH)
+        return
+
     try:
         config = load_config(config_path)
     except ConfigError as e:
@@ -83,6 +111,7 @@ def main() -> None:
         return
 
     if args.check_imports:
+        import config.editor  # noqa: F401  # pyright: ignore[reportMissingImports]
         from main import main as _run_main  # noqa: F401  # pyright: ignore[reportMissingImports]
 
         print("[run.py] OK: startup modules imported successfully")

@@ -117,3 +117,35 @@ def test_home_override_and_directories(
     assert paths.user_home() == home
     for directory in ("log", "data", "data/report"):
         assert (home / directory).is_dir()
+
+
+def test_resolve_report_dir_default(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """空文字なら既定の data/report を使う。"""
+    home = tmp_path / "custom"
+    monkeypatch.setenv(paths.HOME_ENV_VAR, str(home))
+
+    assert paths.resolve_report_dir("") == home / "data" / "report"
+    assert paths.resolve_report_dir(None) == home / "data" / "report"
+    assert paths.resolve_report_dir("   ") == home / "data" / "report"
+
+
+def test_resolve_report_dir_relative(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """相対パスは出力先ルートからの相対パスとして扱う。"""
+    home = tmp_path / "custom"
+    monkeypatch.setenv(paths.HOME_ENV_VAR, str(home))
+
+    assert paths.resolve_report_dir("observations") == home / "observations"
+    assert (
+        paths.resolve_report_dir(Path("nested") / "reports")
+        == home / "nested" / "reports"
+    )
+
+
+def test_resolve_report_dir_absolute(tmp_path: Path) -> None:
+    """絶対パスはそのまま使う。"""
+    absolute = tmp_path / "elsewhere" / "reports"
+    assert paths.resolve_report_dir(str(absolute)) == absolute
